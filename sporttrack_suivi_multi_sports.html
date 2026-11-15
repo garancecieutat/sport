@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- Configuration PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SportTrack" />
+  <meta name="theme-color" content="#F8FAFC" />
+  
+  <title>SportTrack — Suivi Multi-Sports</title>
+  
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      padding-top: var(--sat);
+    }
+
+    .pb-safe-nav {
+      padding-bottom: calc(5.5rem + var(--sab));
+    }
+
+    .nav-bottom-safe {
+      padding-bottom: calc(0.5rem + var(--sab));
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0.6; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #E2E8F0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      margin-top: -6px;
+      background-color: #2563EB;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      border: 2.5px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.22);
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-blue-500/20">
+
+  <div id="app" class="max-w-lg mx-auto min-h-screen relative flex flex-col">
+
+    <!-- EN-TÊTE FIXE -->
+    <header class="sticky top-0 z-30 bg-[#F8FAFC]/90 backdrop-blur-md border-b border-slate-200 px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-sm shadow-blue-600/20">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <h1 id="header-title" class="text-lg font-bold tracking-tight text-slate-900 leading-none">Calendrier</h1>
+          <p id="header-subtitle" class="text-[11px] text-slate-500 mt-0.5">Planning & suivi multi-sports</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openCustomSportModal()" title="Ajouter un sport personnalisé" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center gap-1 active:scale-95 transition shadow-2xs">
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span>Sport</span>
+        </button>
+
+        <button onclick="openActivityModal()" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 transition text-white text-xs font-semibold flex items-center gap-1 shadow-sm shadow-blue-600/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span>Planifier</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="flex-1 px-4 pt-4 pb-safe-nav">
+
+      <!-- ========================================== -->
+      <!-- ONGLET 1 : CALENDRIER                      -->
+      <!-- ========================================== -->
+      <section id="tab-calendar" class="space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <button onclick="navigateCalendar(-1)" aria-label="Période précédente" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button onclick="resetCalendarToday()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 active:scale-95 transition">
+                Aujourd'hui
+              </button>
+              <button onclick="navigateCalendar(1)" aria-label="Période suivante" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+
+            <!-- Bascule Semaine / Mois -->
+            <div class="bg-slate-100 p-1 rounded-xl border border-slate-200/80 flex text-xs font-semibold">
+              <button id="btn-view-week" onclick="setCalendarView('week')" class="px-3 py-1 rounded-lg transition text-slate-500">Semaine</button>
+              <button id="btn-view-month" onclick="setCalendarView('month')" class="px-3 py-1 rounded-lg transition bg-white text-slate-900 shadow-xs">Mois</button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-1">
+            <h2 id="calendar-period-label" class="text-base font-bold text-slate-900 capitalize">Novembre 2026</h2>
+            <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-dashed border-blue-600 inline-block"></span> Prévue</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> Réalisée</span>
+            </div>
+          </div>
+
+          <!-- En-têtes jours -->
+          <div class="grid grid-cols-7 text-center text-[11px] font-semibold text-slate-400 pt-1">
+            <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+          </div>
+
+          <!-- Grille calendrier -->
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+        </div>
+
+        <!-- Détail du jour sélectionné -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Détail du jour</p>
+              <h3 id="selected-day-title" class="text-base font-bold text-slate-900 capitalize">Dimanche 15 Novembre</h3>
+            </div>
+            <button onclick="openActivityModal(null, state.selectedDate)" class="px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <span>Ajouter</span>
+            </button>
+          </div>
+
+          <div id="selected-day-activities" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- ONGLET 2 : ACTIVITÉS                       -->
+      <!-- ========================================== -->
+      <section id="tab-activities" class="hidden space-y-4">
+        <div id="activities-sport-filters" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+
+        <!-- Section À VENIR -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>À venir</span>
+              <span id="count-upcoming" class="px-2 py-0.5 text-[11px] rounded-full bg-slate-200/80 text-slate-700 font-bold">0</span>
+            </h2>
+            <button onclick="openActivityModal()" class="text-xs font-semibold text-blue-600 hover:text-blue-700">+ Planifier une activité</button>
+          </div>
+          <div id="list-upcoming-activities" class="space-y-2.5"></div>
+        </div>
+
+        <!-- Section PASSÉES -->
+        <div class="space-y-2.5 pt-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Passées</span>
+            <span id="count-past" class="px-2 py-0.5 text-[11px] rounded-full bg-slate-200/80 text-slate-700 font-bold">0</span>
+          </h2>
+          <div id="list-past-activities" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- ONGLET 3 : SÉANCES TYPES (MODÈLES)         -->
+      <!-- ========================================== -->
+      <section id="tab-templates" class="hidden space-y-4">
+        <div class="flex items-center justify-between bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Bibliothèque de séances</h2>
+            <p class="text-xs text-slate-500">Crée tes séances types et planifie-les en 1 clic.</p>
+          </div>
+          <button onclick="openTemplateModal()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs active:scale-95 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Nouveau modèle</span>
+          </button>
+        </div>
+
+        <div id="templates-sport-filters" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+
+        <div id="list-templates" class="space-y-3"></div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- ONGLET 4 : STATS                           -->
+      <!-- ========================================== -->
+      <section id="tab-stats" class="hidden space-y-4">
+        <!-- Sélecteurs Mois & Sport (Sans bouton d'export/sauvegarde) -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 shadow-2xs">
+            <label for="stats-month-select" class="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Période</label>
+            <select id="stats-month-select" onchange="renderStats()" class="w-full bg-transparent text-sm font-bold text-slate-900 focus:outline-none mt-0.5"></select>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 shadow-2xs">
+            <label for="stats-sport-select" class="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Discipline</label>
+            <select id="stats-sport-select" onchange="renderStats()" class="w-full bg-transparent text-sm font-bold text-slate-900 focus:outline-none mt-0.5"></select>
+          </div>
+        </div>
+
+        <!-- Cartes Indicateurs -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Séances réalisées -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-semibold">Séances réalisées</span>
+              <span class="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </span>
+            </div>
+            <p id="stat-total-sessions" class="text-2xl font-extrabold text-slate-900">0</p>
+            <p id="stat-planned-sub" class="text-[11px] text-slate-500 mt-0.5">0 prévue(s) sur la période</p>
+          </div>
+
+          <!-- Temps total -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-semibold">Temps total</span>
+              <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </span>
+            </div>
+            <p id="stat-total-time" class="text-2xl font-extrabold text-slate-900">0h 00min</p>
+            <p id="stat-avg-duration" class="text-[11px] text-slate-500 mt-0.5">Moy. 0 min / séance</p>
+          </div>
+
+          <!-- Ressenti moyen (/10) -->
+          <div id="stat-card-feeling" class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-semibold">Ressenti moyen</span>
+              <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </span>
+            </div>
+            <p id="stat-avg-feeling" class="text-2xl font-extrabold text-slate-900">— <span class="text-sm font-normal text-slate-400">/10</span></p>
+            <p id="stat-feeling-sub" class="text-[11px] text-slate-500 mt-0.5">Sur les séances notées</p>
+          </div>
+
+          <!-- Distance & D+ (UNIQUEMENT affiché pour "Tous les sports", "Running" ou "Vélo") -->
+          <div id="stat-card-distance" class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-semibold">Distance & D+</span>
+              <span class="p-1.5 rounded-lg bg-cyan-50 text-cyan-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </span>
+            </div>
+            <p id="stat-total-distance" class="text-2xl font-extrabold text-slate-900">0 km</p>
+            <p id="stat-total-elevation" class="text-[11px] text-slate-500 mt-0.5">+0 m D+ (Run & Vélo)</p>
+          </div>
+        </div>
+
+        <!-- Section Répartition par sport (UNIQUEMENT affichée lorsque filtre = "Tous les sports") -->
+        <div id="stats-breakdown-section" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3.5 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900">Répartition par sport</h3>
+            <span class="text-[11px] font-medium text-slate-400">Séances & Temps</span>
+          </div>
+          <div id="stats-sport-breakdown" class="space-y-3.5"></div>
+        </div>
+
+        <!-- Historique filtré des séances réalisées -->
+        <div class="space-y-2.5 pt-1">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Historique des séances réalisées</h3>
+            <span id="stats-history-count" class="px-2 py-0.5 text-[11px] rounded-full bg-slate-200/80 text-slate-700 font-bold">0</span>
+          </div>
+          <div id="stats-history-list" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- BARRE DE NAVIGATION INFÉRIEURE (4 ONGLETS) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-lg border-t border-slate-200 nav-bottom-safe">
+      <div class="max-w-lg mx-auto grid grid-cols-4 px-2 pt-1.5">
+        <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-blue-600 transition">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="text-[10px] font-semibold">Calendrier</span>
+        </button>
+
+        <button onclick="switchTab('activities')" id="nav-activities" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-700 transition">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span class="text-[10px] font-semibold">Activités</span>
+        </button>
+
+        <button onclick="switchTab('templates')" id="nav-templates" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-700 transition">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span class="text-[10px] font-semibold">Séances</span>
+        </button>
+
+        <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-700 transition">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span class="text-[10px] font-semibold">Stats</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 1 : PLANIFIER / MODIFIER UNE ACTIVITÉ                          -->
+  <!-- ===================================================================== -->
+  <div id="modal-activity" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white border-t sm:border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col animate-slide-up shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <h3 id="modal-activity-title" class="text-base font-bold text-slate-900">Planifier une activité</h3>
+        <button onclick="closeModal('modal-activity')" class="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="form-activity" onsubmit="saveActivity(event)" class="p-5 space-y-4 overflow-y-auto flex-1">
+        <input type="hidden" id="act-id" />
+
+        <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200/70">
+          <button type="button" id="act-status-planned" onclick="setActivityFormStatus('planned')" class="py-1.5 rounded-lg text-xs font-semibold bg-white text-blue-600 shadow-2xs transition">À venir (Prévue)</button>
+          <button type="button" id="act-status-completed" onclick="setActivityFormStatus('completed')" class="py-1.5 rounded-lg text-xs font-semibold text-slate-500 transition">Déjà réalisée</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sport</label>
+            <select id="act-sport" onchange="onActivitySportChange()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
+            <input type="date" id="act-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Titre de la séance</label>
+            <input type="text" id="act-title" placeholder="Ex: Sortie longue, Match..." required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Durée (min)</label>
+            <input type="number" id="act-duration" min="1" max="1440" placeholder="60" oninput="updateEndurancePace()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-600">Programme / Contenu</label>
+            <button type="button" onclick="openTemplatePicker()" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Importer séance(s) type(s)</span>
+            </button>
+          </div>
+          <textarea id="act-description" rows="3" placeholder="Détails de l'entraînement ou importe un modèle..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"></textarea>
+        </div>
+
+        <!-- CHAMPS INTELLIGENTS -->
+        <div id="smart-fields-container" class="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-3"></div>
+
+        <!-- Ressenti & Commentaire (si Réalisée) -->
+        <div id="act-completed-fields" class="hidden bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-emerald-800">Note de ressenti / effort</label>
+            <span id="act-feeling-badge" class="px-2.5 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">7 / 10</span>
+          </div>
+          <input type="range" id="act-feeling" min="1" max="10" value="7" oninput="document.getElementById('act-feeling-badge').textContent = this.value + ' / 10'" class="w-full" />
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Commentaire post-séance</label>
+            <input type="text" id="act-comment" placeholder="Bonnes jambes, cardio stable..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2.5">
+          <button type="button" onclick="closeModal('modal-activity')" class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold">Annuler</button>
+          <button type="submit" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm shadow-blue-600/20">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 2 : SÉLECTEUR DE MODÈLES DE SÉANCES                           -->
+  <!-- ===================================================================== -->
+  <div id="modal-template-picker" class="fixed inset-0 z-[60] hidden bg-slate-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white border-t sm:border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[80vh] flex flex-col animate-slide-up shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Combiner des séances types</h3>
+          <p class="text-xs text-slate-500">Coche un ou plusieurs modèles à ajouter</p>
+        </div>
+        <button onclick="closeModal('modal-template-picker')" class="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="template-picker-list" class="p-4 space-y-2 overflow-y-auto flex-1"></div>
+      <div class="p-4 border-t border-slate-100 flex gap-2.5">
+        <button type="button" onclick="closeModal('modal-template-picker')" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Fermer</button>
+        <button type="button" onclick="applySelectedTemplates()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold">Ajouter à la séance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 3 : VALIDER UNE SÉANCE PRÉVUE                                  -->
+  <!-- ===================================================================== -->
+  <div id="modal-validate" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white border-t sm:border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col animate-slide-up shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Validation d'entraînement</span>
+          <h3 id="val-title" class="text-base font-bold text-slate-900">Titre séance</h3>
+        </div>
+        <button onclick="closeModal('modal-validate')" class="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="confirmValidation(event)" class="p-5 space-y-4 overflow-y-auto">
+        <input type="hidden" id="val-act-id" />
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Durée réelle (min)</label>
+          <input type="number" id="val-duration" min="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div id="val-smart-fields" class="space-y-3"></div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-800">Note de ressenti (/10)</label>
+            <span id="val-feeling-display" class="px-2.5 py-0.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">8 / 10</span>
+          </div>
+          <input type="range" id="val-feeling" min="1" max="10" value="8" oninput="document.getElementById('val-feeling-display').textContent = this.value + ' / 10'" class="w-full" />
+          <div class="flex justify-between text-[10px] font-medium text-slate-400">
+            <span>1 - Très facile</span>
+            <span>5 - Modéré</span>
+            <span>10 - Effort max</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Commentaire / Sensations</label>
+          <textarea id="val-comment" rows="2" placeholder="Comment s'est passée la séance ?" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModal('modal-validate')" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Annuler</button>
+          <button type="submit" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm shadow-emerald-600/20">Marquer réalisée</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 4 : CRÉER / MODIFIER UN MODÈLE DE SÉANCE TYPE                  -->
+  <!-- ===================================================================== -->
+  <div id="modal-template" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white border-t sm:border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col animate-slide-up shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="modal-template-title" class="text-base font-bold text-slate-900">Nouveau modèle de séance</h3>
+        <button onclick="closeModal('modal-template')" class="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="saveTemplate(event)" class="p-5 space-y-4 overflow-y-auto">
+        <input type="hidden" id="tpl-id" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sport</label>
+            <select id="tpl-sport" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Durée estimée (min)</label>
+            <input type="number" id="tpl-duration" min="1" required placeholder="45" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Titre du modèle</label>
+          <input type="text" id="tpl-title" required placeholder="Ex: Fractionné court 400m" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Description détaillée</label>
+          <textarea id="tpl-description" rows="4" required placeholder="Ex: 15 min échauffement + 5x400m à 6min/km (récup 1min) + 10 min retour au calme" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModal('modal-template')" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Annuler</button>
+          <button type="submit" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 5 : AJOUTER UN SPORT PERSONNALISÉ                              -->
+  <!-- ===================================================================== -->
+  <div id="modal-custom-sport" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white border-t sm:border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col animate-slide-up shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900">Sports & Disciplines</h3>
+        <button onclick="closeModal('modal-custom-sport')" class="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <form onsubmit="addCustomSport(event)" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Nouveau sport personnalisé</h4>
+          <div class="flex gap-2.5">
+            <input type="text" id="custom-sport-name" placeholder="Ex: Natation, Escalade, Yoga..." required class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none" />
+            <input type="color" id="custom-sport-color" value="#6366F1" title="Couleur du sport" class="w-11 h-10 rounded-xl bg-white border border-slate-200 cursor-pointer p-1" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Champs associés</label>
+            <select id="custom-sport-category" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none">
+              <option value="standard">Standard (Durée, ressenti, notes libres)</option>
+              <option value="strength">Renforcement (Exercices, séries, reps, kg)</option>
+              <option value="racket">Raquette / Duel (Type, adversaire, score, technique)</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Ajouter ce sport</button>
+        </form>
+
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Sports actifs</p>
+          <div id="settings-sports-list" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODALE 6 : CONFIRMATION DE SUPPRESSION                                -->
+  <!-- ===================================================================== -->
+  <div id="modal-confirm" class="fixed inset-0 z-[70] hidden bg-slate-900/45 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-5 space-y-4 animate-fade-in shadow-xl">
+      <h4 id="confirm-title" class="text-base font-bold text-slate-900">Confirmer la suppression</h4>
+      <p id="confirm-message" class="text-xs text-slate-500 leading-relaxed">Es-tu sûr de vouloir supprimer cet élément ?</p>
+      <div class="flex gap-2.5">
+        <button onclick="closeModal('modal-confirm')" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold">Annuler</button>
+        <button id="confirm-yes-btn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-[80] hidden px-4 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-lg flex items-center gap-2">
+    <span id="toast-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-text">Action effectuée</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- LOGIQUE JAVASCRIPT                                                    -->
+  <!-- ===================================================================== -->
+  <script>
+    const STORAGE_KEY = 'sporttrack_light_v2';
+
+    const DEFAULT_SPORTS = [
+      { id: 'equitation', name: 'Équitation', color: '#D97706', category: 'equestrian' },
+      { id: 'running', name: 'Running', color: '#2563EB', category: 'endurance' },
+      { id: 'velo', name: 'Vélo', color: '#059669', category: 'endurance' },
+      { id: 'renforcement', name: 'Renforcement', color: '#7C3AED', category: 'strength' },
+      { id: 'tennis', name: 'Tennis', color: '#EA580C', category: 'racket' },
+      { id: 'badminton', name: 'Badminton', color: '#0891B2', category: 'racket' }
+    ];
+
+    const DISTANCE_SPORTS = ['running', 'velo'];
+
+    function toDateStr(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDays(dateStr, days) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d + days);
+      return toDateStr(dt);
+    }
+
+    const TODAY_STR = toDateStr(new Date());
+
+    function getInitialSeedData() {
+      return {
+        sports: [...DEFAULT_SPORTS],
+        templates: [
+          {
+            id: 'tpl_1',
+            sportId: 'running',
+            title: 'Fractionné court 400m',
+            duration: 45,
+            description: '15 min échauffement souple + 5x400m à 5min/km (récup 1min trot) + 10 min retour au calme.'
+          },
+          {
+            id: 'tpl_2',
+            sportId: 'renforcement',
+            title: 'Full Body Gainage & Jambes',
+            duration: 40,
+            description: 'Circuit 4 tours : Squats, Fentes avant, Pompes, Planche ventrale 45s, Gainage latéral 30s/côté.'
+          },
+          {
+            id: 'tpl_3',
+            sportId: 'tennis',
+            title: 'Gammes fond de court & Service',
+            duration: 60,
+            description: '20 min régularité croisée coup droit/revers + 20 min montées au filet + 20 min services.'
+          },
+          {
+            id: 'tpl_4',
+            sportId: 'velo',
+            title: 'Sortie endurance route',
+            duration: 90,
+            description: 'Cadence 85-90 rpm sur parcours vallonné en zone 2.'
+          }
+        ],
+        activities: [
+          {
+            id: 'act_demo_1',
+            sportId: 'running',
+            date: addDays(TODAY_STR, -3),
+            title: 'Footing endurance fondamentale',
+            duration: 48,
+            status: 'completed',
+            description: 'Sortie tranquille en aisance respiratoire autour du parc.',
+            feeling: 8,
+            comment: 'Super sensations, jambes légères.',
+            smartData: { distance: 8.5, elevation: 65 }
+          },
+          {
+            id: 'act_demo_2',
+            sportId: 'velo',
+            date: addDays(TODAY_STR, -1),
+            title: 'Boucle côte & vallée',
+            duration: 75,
+            status: 'completed',
+            description: 'Travail en vélocité dans les bosses.',
+            feeling: 7,
+            comment: 'Un peu de vent de face au retour.',
+            smartData: { distance: 31.2, elevation: 340 }
+          },
+          {
+            id: 'act_demo_3',
+            sportId: 'renforcement',
+            date: addDays(TODAY_STR, -2),
+            title: 'Renfo haut du corps & sangle',
+            duration: 40,
+            status: 'completed',
+            description: 'Séance salle complète.',
+            feeling: 8,
+            comment: 'Bonne congestion.',
+            smartData: {
+              exercises: [
+                { name: 'Développé couché', sets: 4, reps: 10, weight: 50 },
+                { name: 'Rowing haltères', sets: 4, reps: 12, weight: 18 }
+              ]
+            }
+          },
+          {
+            id: 'act_demo_4',
+            sportId: 'equitation',
+            date: addDays(TODAY_STR, 1),
+            title: 'Séance de plat & transitions',
+            duration: 60,
+            status: 'planned',
+            description: 'Travail sur l’incurvation aux deux mains et transitions pas-galop.',
+            feeling: null,
+            comment: '',
+            smartData: { horse: 'Storm', discipline: 'Plat', notes: 'Garder les mains basses et fixes' }
+          },
+          {
+            id: 'act_demo_5',
+            sportId: 'badminton',
+            date: addDays(TODAY_STR, 3),
+            title: 'Double amical',
+            duration: 90,
+            status: 'planned',
+            description: 'Travail des déplacements avant-arrière et amortis.',
+            feeling: null,
+            comment: '',
+            smartData: { matchType: 'Match amical', opponent: 'Lucas', score: '', tech: 'Amortis & service court' }
+          }
+        ]
+      };
+    }
+
+    let state = {
+      data: null,
+      activeTab: 'calendar',
+      calendarView: 'month',
+      calendarCursor: TODAY_STR,
+      selectedDate: TODAY_STR,
+      filterActivitiesSport: 'all',
+      filterTemplatesSport: 'all',
+      tempExercises: [],
+      valExercises: []
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          state.data = JSON.parse(raw);
+          if (!state.data.sports || !state.data.sports.length) state.data.sports = [...DEFAULT_SPORTS];
+          if (!state.data.templates) state.data.templates = [];
+          if (!state.data.activities) state.data.activities = [];
+        } else {
+          state.data = getInitialSeedData();
+          saveState();
+        }
+      } catch (e) {
+        console.error('Erreur chargement localStorage:', e);
+        state.data = getInitialSeedData();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      } catch (e) {
+        showToast('Erreur de sauvegarde locale', true);
+      }
+    }
+
+    function getSport(sportId) {
+      return state.data.sports.find(s => s.id === sportId) || { id: sportId, name: 'Sport', color: '#64748B', category: 'standard' };
+    }
+
+    function formatDuration(minutes) {
+      const m = parseInt(minutes, 10) || 0;
+      const h = Math.floor(m / 60);
+      const rem = m % 60;
+      if (h === 0) return `${rem} min`;
+      return `${h}h ${String(rem).padStart(2, '0')}min`;
+    }
+
+    function formatDateFr(dateStr, options = { weekday: 'long', day: 'numeric', month: 'long' }) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt.toLocaleDateString('fr-FR', options);
+    }
+
+    function calculatePace(durationMin, distanceKm) {
+      if (!durationMin || !distanceKm || distanceKm <= 0) return null;
+      const paceDecimal = durationMin / distanceKm;
+      const paceMin = Math.floor(paceDecimal);
+      const paceSec = Math.round((paceDecimal - paceMin) * 60);
+      if (paceSec === 60) return `${paceMin + 1}:00 min/km`;
+      return `${paceMin}:${String(paceSec).padStart(2, '0')} min/km`;
+    }
+
+    function calculateSpeed(durationMin, distanceKm) {
+      if (!durationMin || !distanceKm || durationMin <= 0) return null;
+      const speed = (distanceKm / (durationMin / 60)).toFixed(1);
+      return `${speed} km/h`;
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      const dot = document.getElementById('toast-dot');
+      document.getElementById('toast-text').textContent = msg;
+      dot.className = `w-2 h-2 rounded-full ${isError ? 'bg-red-400' : 'bg-emerald-400'}`;
+      toast.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 2800);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function askConfirm(title, message, onConfirm) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      const btn = document.getElementById('confirm-yes-btn');
+      btn.onclick = () => {
+        closeModal('modal-confirm');
+        onConfirm();
+      };
+      document.getElementById('modal-confirm').classList.remove('hidden');
+    }
+
+    // --- NAVIGATION ---
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      const tabs = ['calendar', 'activities', 'templates', 'stats'];
+      const titles = {
+        calendar: ['Calendrier', 'Planning & suivi multi-sports'],
+        activities: ['Activités', 'Séances à venir & passées'],
+        templates: ['Séances', 'Modèles de séances types'],
+        stats: ['Stats', 'Volume & progression']
+      };
+
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const nav = document.getElementById(`nav-${t}`);
+        if (t === tabName) {
+          el.classList.remove('hidden');
+          nav.classList.remove('text-slate-400');
+          nav.classList.add('text-blue-600', 'bg-blue-50');
+        } else {
+          el.classList.add('hidden');
+          nav.classList.add('text-slate-400');
+          nav.classList.remove('text-blue-600', 'bg-blue-50');
+        }
+      });
+
+      document.getElementById('header-title').textContent = titles[tabName][0];
+      document.getElementById('header-subtitle').textContent = titles[tabName][1];
+
+      if (tabName === 'calendar') renderCalendar();
+      if (tabName === 'activities') renderActivities();
+      if (tabName === 'templates') renderTemplates();
+      if (tabName === 'stats') initAndRenderStats();
+    }
+
+    // --- ONGLET 1 : CALENDRIER ---
+    function setCalendarView(view) {
+      state.calendarView = view;
+      const btnW = document.getElementById('btn-view-week');
+      const btnM = document.getElementById('btn-view-month');
+      if (view === 'week') {
+        btnW.className = 'px-3 py-1 rounded-lg transition bg-white text-slate-900 shadow-xs';
+        btnM.className = 'px-3 py-1 rounded-lg transition text-slate-500';
+      } else {
+        btnM.className = 'px-3 py-1 rounded-lg transition bg-white text-slate-900 shadow-xs';
+        btnW.className = 'px-3 py-1 rounded-lg transition text-slate-500';
+      }
+      renderCalendar();
+    }
+
+    function navigateCalendar(dir) {
+      const [y, m, d] = state.calendarCursor.split('-').map(Number);
+      if (state.calendarView === 'month') {
+        const next = new Date(y, m - 1 + dir, 1);
+        state.calendarCursor = toDateStr(next);
+      } else {
+        const next = new Date(y, m - 1, d + dir * 7);
+        state.calendarCursor = toDateStr(next);
+      }
+      renderCalendar();
+    }
+
+    function resetCalendarToday() {
+      state.calendarCursor = TODAY_STR;
+      state.selectedDate = TODAY_STR;
+      renderCalendar();
+    }
+
+    function selectCalendarDay(dateStr) {
+      state.selectedDate = dateStr;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const [cy, cm, cd] = state.calendarCursor.split('-').map(Number);
+      const cursorDate = new Date(cy, cm - 1, cd);
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+
+      let daysToRender = [];
+
+      if (state.calendarView === 'month') {
+        document.getElementById('calendar-period-label').textContent =
+          cursorDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+        const firstDayOfMonth = new Date(cy, cm - 1, 1);
+        let startWeekday = (firstDayOfMonth.getDay() + 6) % 7;
+        const daysInMonth = new Date(cy, cm, 0).getDate();
+
+        for (let i = 0; i < startWeekday; i++) daysToRender.push(null);
+        for (let day = 1; day <= daysInMonth; day++) {
+          daysToRender.push(toDateStr(new Date(cy, cm - 1, day)));
+        }
+      } else {
+        const weekday = (cursorDate.getDay() + 6) % 7;
+        const monday = new Date(cy, cm - 1, cd - weekday);
+        const sunday = new Date(cy, cm - 1, cd - weekday + 6);
+
+        const mLabel = monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        const sLabel = sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+        document.getElementById('calendar-period-label').textContent = `${mLabel} – ${sLabel}`;
+
+        for (let i = 0; i < 7; i++) {
+          daysToRender.push(toDateStr(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)));
+        }
+      }
+
+      const actByDate = {};
+      state.data.activities.forEach(a => {
+        if (!actByDate[a.date]) actByDate[a.date] = [];
+        actByDate[a.date].push(a);
+      });
+
+      daysToRender.forEach(dateStr => {
+        if (!dateStr) {
+          const empty = document.createElement('div');
+          empty.className = 'h-12 rounded-xl';
+          grid.appendChild(empty);
+          return;
+        }
+
+        const dayNum = Number(dateStr.split('-')[2]);
+        const isToday = dateStr === TODAY_STR;
+        const isSelected = dateStr === state.selectedDate;
+        const dayActs = actByDate[dateStr] || [];
+
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.onclick = () => selectCalendarDay(dateStr);
+
+        let baseClasses = 'h-12 rounded-xl flex flex-col items-center justify-between py-1.5 px-1 transition relative border ';
+        if (isSelected) {
+          baseClasses += 'bg-blue-50 border-blue-500 text-blue-900 shadow-2xs';
+        } else if (isToday) {
+          baseClasses += 'bg-slate-100 border-slate-300 text-slate-900';
+        } else {
+          baseClasses += 'bg-slate-50/70 border-transparent hover:border-slate-200 text-slate-700';
+        }
+        cell.className = baseClasses;
+
+        const numSpan = document.createElement('span');
+        numSpan.className = `text-xs font-semibold leading-none ${isToday ? 'text-blue-600 font-extrabold' : ''}`;
+        numSpan.textContent = dayNum;
+        cell.appendChild(numSpan);
+
+        const dotsWrap = document.createElement('div');
+        dotsWrap.className = 'flex items-center justify-center gap-1 flex-wrap max-w-full px-0.5';
+
+        dayActs.slice(0, 4).forEach(act => {
+          const sp = getSport(act.sportId);
+          const dot = document.createElement('span');
+          if (act.status === 'completed') {
+            dot.className = 'w-2 h-2 rounded-full shrink-0';
+            dot.style.backgroundColor = sp.color;
+          } else {
+            dot.className = 'w-2 h-2 rounded-full border-[1.5px] border-dashed shrink-0 bg-white';
+            dot.style.borderColor = sp.color;
+          }
+          dotsWrap.appendChild(dot);
+        });
+
+        cell.appendChild(dotsWrap);
+        grid.appendChild(cell);
+      });
+
+      document.getElementById('selected-day-title').textContent = formatDateFr(state.selectedDate);
+      const dayContainer = document.getElementById('selected-day-activities');
+      const selectedActs = actByDate[state.selectedDate] || [];
+
+      if (selectedActs.length === 0) {
+        dayContainer.innerHTML = `
+          <div class="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <p class="text-xs text-slate-400">Aucune séance enregistrée ce jour-là.</p>
+          </div>`;
+      } else {
+        dayContainer.innerHTML = selectedActs.map(act => renderActivityCardHTML(act, false)).join('');
+      }
+    }
+
+    // --- ONGLET 2 : ACTIVITÉS ---
+    function renderSportFilterPills(containerId, currentFilter, onSelectFnName) {
+      const container = document.getElementById(containerId);
+      const pills = [
+        `<button onclick="${onSelectFnName}('all')" class="px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition border ${currentFilter === 'all' ? 'bg-slate-900 text-white border-slate-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">Tous</button>`
+      ];
+
+      state.data.sports.forEach(sp => {
+        const active = currentFilter === sp.id;
+        pills.push(`
+          <button onclick="${onSelectFnName}('${sp.id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 transition border ${active ? 'text-white border-transparent shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}" style="${active ? `background-color: ${sp.color}` : ''}">
+            <span class="w-2 h-2 rounded-full" style="background-color: ${active ? '#fff' : sp.color}"></span>
+            <span>${sp.name}</span>
+          </button>
+        `);
+      });
+
+      container.innerHTML = pills.join('');
+    }
+
+    function setActivitiesSportFilter(sportId) {
+      state.filterActivitiesSport = sportId;
+      renderActivities();
+    }
+
+    function renderActivities() {
+      renderSportFilterPills('activities-sport-filters', state.filterActivitiesSport, 'setActivitiesSportFilter');
+
+      const filtered = state.data.activities.filter(a =>
+        state.filterActivitiesSport === 'all' || a.sportId === state.filterActivitiesSport
+      );
+
+      const upcoming = filtered
+        .filter(a => a.status === 'planned')
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const past = filtered
+        .filter(a => a.status === 'completed')
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      document.getElementById('count-upcoming').textContent = upcoming.length;
+      document.getElementById('count-past').textContent = past.length;
+
+      const upEl = document.getElementById('list-upcoming-activities');
+      const pastEl = document.getElementById('list-past-activities');
+
+      upEl.innerHTML = upcoming.length
+        ? upcoming.map(a => renderActivityCardHTML(a, true)).join('')
+        : `<div class="p-4 rounded-2xl bg-white border border-dashed border-slate-200 text-center text-xs text-slate-400">Aucune séance planifiée à venir.</div>`;
+
+      pastEl.innerHTML = past.length
+        ? past.map(a => renderActivityCardHTML(a, true)).join('')
+        : `<div class="p-4 rounded-2xl bg-white border border-dashed border-slate-200 text-center text-xs text-slate-400">Aucune séance passée pour ce filtre.</div>`;
+    }
+
+    function renderSmartBadges(act, sport) {
+      const sd = act.smartData || {};
+      const chips = [];
+
+      if (sport.category === 'endurance') {
+        if (sd.distance) chips.push(`${sd.distance} km`);
+        if (sd.distance && act.duration) {
+          const pace = sport.id === 'velo' ? calculateSpeed(act.duration, sd.distance) : calculatePace(act.duration, sd.distance);
+          if (pace) chips.push(pace);
+        }
+        if (sd.elevation) chips.push(`+${sd.elevation}m D+`);
+      } else if (sport.category === 'strength') {
+        if (sd.exercises && sd.exercises.length) {
+          chips.push(`${sd.exercises.length} exercice${sd.exercises.length > 1 ? 's' : ''}`);
+        }
+      } else if (sport.category === 'racket') {
+        if (sd.matchType) chips.push(sd.matchType);
+        if (sd.opponent) chips.push(`vs ${sd.opponent}`);
+        if (sd.score) chips.push(`Score: ${sd.score}`);
+        if (sd.tech) chips.push(sd.tech);
+      } else if (sport.category === 'equestrian') {
+        if (sd.horse) chips.push(`🐴 ${sd.horse}`);
+        if (sd.discipline) chips.push(sd.discipline);
+        if (sd.notes) chips.push(sd.notes);
+      } else if (sd.customGoal) {
+        chips.push(sd.customGoal);
+      }
+
+      return chips.map(c => `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200/70">${c}</span>`).join('');
+    }
+
+    function renderActivityCardHTML(act, showDate = true) {
+      const sp = getSport(act.sportId);
+      const isCompleted = act.status === 'completed';
+      const smartChips = renderSmartBadges(act, sp);
+
+      let extraDetail = '';
+      if (sp.category === 'strength' && act.smartData?.exercises?.length) {
+        const list = act.smartData.exercises.map(ex =>
+          `<span class="inline-block mr-2.5 text-[11px] text-slate-600">• <strong>${ex.name}</strong> (${ex.sets}×${ex.reps}${ex.weight ? ` @ ${ex.weight}kg` : ''})</span>`
+        ).join('');
+        extraDetail = `<div class="mt-1.5 pt-1.5 border-t border-slate-100 flex flex-wrap">${list}</div>`;
+      }
+
+      return `
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-2.5 shadow-2xs transition">
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold text-white" style="background-color: ${sp.color}">${sp.name}</span>
+                ${!isCompleted ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Prévue</span>` : ''}
+                ${showDate ? `<span class="text-[11px] text-slate-500 capitalize font-medium">${formatDateFr(act.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>` : ''}
+                <span class="text-[11px] text-slate-500 font-medium">• ${formatDuration(act.duration)}</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 leading-snug">${act.title}</h4>
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openActivityModal('${act.id}')" title="Modifier" class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button onclick="deleteActivity('${act.id}')" title="Supprimer" class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-red-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+
+          ${act.description ? `<p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">${act.description}</p>` : ''}
+          ${smartChips ? `<div class="flex flex-wrap gap-1.5">${smartChips}</div>` : ''}
+          ${extraDetail}
+
+          ${!isCompleted ? `
+            <div class="pt-1">
+              <button onclick="openValidateModal('${act.id}')" class="w-full py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-[0.99] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Valider la séance</span>
+              </button>
+            </div>
+          ` : `
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <span class="text-emerald-600 font-semibold flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                Réalisée
+              </span>
+              <div class="flex items-center gap-2 text-slate-500">
+                ${act.comment ? `<span class="italic truncate max-w-[165px]">"${act.comment}"</span>` : ''}
+                ${act.feeling ? `<span class="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 font-bold">Ressenti ${act.feeling}/10</span>` : ''}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // --- FORMULAIRE ACTIVITÉ & CHAMPS INTELLIGENTS + GPX ---
+    function populateSportSelect(selectId, selectedSportId = null) {
+      const sel = document.getElementById(selectId);
+      sel.innerHTML = state.data.sports.map(sp =>
+        `<option value="${sp.id}" ${sp.id === selectedSportId ? 'selected' : ''}>${sp.name}</option>`
+      ).join('');
+    }
+
+    function setActivityFormStatus(status) {
+      const btnP = document.getElementById('act-status-planned');
+      const btnC = document.getElementById('act-status-completed');
+      const compFields = document.getElementById('act-completed-fields');
+      document.getElementById('form-activity').dataset.status = status;
+
+      if (status === 'completed') {
+        btnC.className = 'py-1.5 rounded-lg text-xs font-semibold bg-white text-emerald-700 shadow-2xs transition';
+        btnP.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 transition';
+        compFields.classList.remove('hidden');
+      } else {
+        btnP.className = 'py-1.5 rounded-lg text-xs font-semibold bg-white text-blue-600 shadow-2xs transition';
+        btnC.className = 'py-1.5 rounded-lg text-xs font-semibold text-slate-500 transition';
+        compFields.classList.add('hidden');
+      }
+    }
+
+    function openActivityModal(activityId = null, presetDate = null) {
+      const act = activityId ? state.data.activities.find(a => a.id === activityId) : null;
+      document.getElementById('modal-activity-title').textContent = act ? 'Modifier la séance' : 'Planifier une activité';
+      document.getElementById('act-id').value = act ? act.id : '';
+
+      const defaultSport = act ? act.sportId : (state.filterActivitiesSport !== 'all' ? state.filterActivitiesSport : state.data.sports[0].id);
+      populateSportSelect('act-sport', defaultSport);
+
+      document.getElementById('act-date').value = act ? act.date : (presetDate || state.selectedDate || TODAY_STR);
+      document.getElementById('act-title').value = act ? act.title : '';
+      document.getElementById('act-duration').value = act ? act.duration : 45;
+      document.getElementById('act-description').value = act ? (act.description || '') : '';
+
+      const status = act ? act.status : 'planned';
+      setActivityFormStatus(status);
+
+      document.getElementById('act-feeling').value = act?.feeling || 7;
+      document.getElementById('act-feeling-badge').textContent = `${act?.feeling || 7} / 10`;
+      document.getElementById('act-comment').value = act?.comment || '';
+
+      state.tempExercises = act?.smartData?.exercises ? JSON.parse(JSON.stringify(act.smartData.exercises)) : [];
+      onActivitySportChange(act?.smartData || {});
+
+      document.getElementById('modal-activity').classList.remove('hidden');
+    }
+
+    function onActivitySportChange(existingSmartData = {}) {
+      const sportId = document.getElementById('act-sport').value;
+      const sport = getSport(sportId);
+      const container = document.getElementById('smart-fields-container');
+
+      if (sport.category === 'endurance') {
+        const metricLabel = sport.id === 'velo' ? 'Vitesse moyenne estimée :' : 'Allure moyenne estimée :';
+        container.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-blue-700">Métriques ${sport.name}</span>
+            <label class="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 text-[11px] font-semibold cursor-pointer flex items-center gap-1 shrink-0">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span>Importer un fichier .GPX (Garmin / Strava)</span>
+              <input type="file" accept=".gpx,application/gpx+xml,text/xml" onchange="handleGPXUpload(event)" class="hidden" />
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Distance (km)</label>
+              <input type="number" step="0.01" id="sd-distance" value="${existingSmartData.distance || ''}" oninput="updateEndurancePace()" placeholder="10.0" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Dénivelé D+ (m)</label>
+              <input type="number" id="sd-elevation" value="${existingSmartData.elevation || ''}" placeholder="120" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none" />
+            </div>
+          </div>
+          <div id="sd-pace-preview" class="text-[11px] text-slate-600 bg-white border border-slate-200/80 px-3 py-1.5 rounded-lg flex justify-between">
+            <span>${metricLabel}</span>
+            <strong id="sd-pace-value" class="text-blue-600">—</strong>
+          </div>
+        `;
+        updateEndurancePace();
+      } else if (sport.category === 'strength') {
+        if (state.tempExercises.length === 0) {
+          state.tempExercises.push({ name: '', sets: 3, reps: 10, weight: '' });
+        }
+        container.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-700">Exercices de Renforcement</span>
+            <button type="button" onclick="addExerciseRow()" class="text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg hover:bg-purple-100">+ Exercice</button>
+          </div>
+          <div id="exercises-list-editor" class="space-y-2"></div>
+        `;
+        renderExercisesEditor();
+      } else if (sport.category === 'racket') {
+        container.innerHTML = `
+          <span class="block text-xs font-bold text-orange-700">Détails ${sport.name}</span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Type de séance</label>
+              <select id="sd-matchType" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 focus:outline-none">
+                ${['Entraînement', 'Match amical', 'Tournoi'].map(t => `<option value="${t}" ${existingSmartData.matchType === t ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Partenaire / Adversaire</label>
+              <input type="text" id="sd-opponent" value="${existingSmartData.opponent || ''}" placeholder="Prénom..." class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900 focus:outline-none" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Score (optionnel)</label>
+              <input type="text" id="sd-score" value="${existingSmartData.score || ''}" placeholder="6/4 6/3" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Points techniques travaillés</label>
+              <input type="text" id="sd-tech" value="${existingSmartData.tech || ''}" placeholder="Service, volée..." class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900 focus:outline-none" />
+            </div>
+          </div>
+        `;
+      } else if (sport.category === 'equestrian') {
+        container.innerHTML = `
+          <span class="block text-xs font-bold text-amber-700">Détails Équitation</span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nom du cheval</label>
+              <input type="text" id="sd-horse" value="${existingSmartData.horse || ''}" placeholder="Nom du cheval" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Discipline</label>
+              <select id="sd-discipline" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 focus:outline-none">
+                ${['Plat', 'Obstacle', 'Extérieur', 'Longe'].map(d => `<option value="${d}" ${existingSmartData.discipline === d ? 'selected' : ''}>${d}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Objectifs / Sensations</label>
+            <input type="text" id="sd-notes" value="${existingSmartData.notes || ''}" placeholder="Cadence, incurvation, équilibre..." class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900 focus:outline-none" />
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <span class="block text-xs font-bold text-slate-700">Notes libres</span>
+          <input type="text" id="sd-customGoal" value="${existingSmartData.customGoal || ''}" placeholder="Intensité, matériel ou objectif du jour..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none" />
+        `;
+      }
+    }
+
+    function updateEndurancePace() {
+      const distEl = document.getElementById('sd-distance');
+      const paceValEl = document.getElementById('sd-pace-value');
+      if (!distEl || !paceValEl) return;
+
+      const sportId = document.getElementById('act-sport').value;
+      const dist = parseFloat(distEl.value);
+      const dur = parseFloat(document.getElementById('act-duration').value);
+      if (dist > 0 && dur > 0) {
+        paceValEl.textContent = sportId === 'velo' ? calculateSpeed(dur, dist) : calculatePace(dur, dist);
+      } else {
+        paceValEl.textContent = '—';
+      }
+    }
+
+    function renderExercisesEditor() {
+      const wrap = document.getElementById('exercises-list-editor');
+      if (!wrap) return;
+      wrap.innerHTML = state.tempExercises.map((ex, idx) => `
+        <div class="grid grid-cols-12 gap-1.5 items-center bg-white p-2 rounded-xl border border-slate-200">
+          <input type="text" placeholder="Exercice" value="${ex.name}" onchange="state.tempExercises[${idx}].name = this.value" class="col-span-5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-900" />
+          <input type="number" placeholder="Sér." value="${ex.sets}" onchange="state.tempExercises[${idx}].sets = this.value" class="col-span-2 bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs text-slate-900 text-center" />
+          <input type="number" placeholder="Rép." value="${ex.reps}" onchange="state.tempExercises[${idx}].reps = this.value" class="col-span-2 bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs text-slate-900 text-center" />
+          <input type="number" step="0.5" placeholder="kg" value="${ex.weight}" onchange="state.tempExercises[${idx}].weight = this.value" class="col-span-2 bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs text-slate-900 text-center" />
+          <button type="button" onclick="removeExerciseRow(${idx})" class="col-span-1 text-slate-400 hover:text-red-600 font-bold flex justify-center">×</button>
+        </div>
+      `).join('');
+    }
+
+    function addExerciseRow() {
+      state.tempExercises.push({ name: '', sets: 3, reps: 12, weight: '' });
+      renderExercisesEditor();
+    }
+
+    function removeExerciseRow(idx) {
+      state.tempExercises.splice(idx, 1);
+      renderExercisesEditor();
+    }
+
+    // Parseur XML .GPX (Garmin / Strava) avec distance Haversine & D+
+    function handleGPXUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(e.target.result, 'text/xml');
+          const trkpts = Array.from(xml.getElementsByTagName('trkpt'));
+
+          if (trkpts.length < 2) {
+            showToast('Fichier GPX invalide ou vide', true);
+            return;
+          }
+
+          let totalDistKm = 0;
+          let totalAscentM = 0;
+          let startTime = null;
+          let endTime = null;
+
+          const toRad = deg => (deg * Math.PI) / 180;
+
+          for (let i = 0; i < trkpts.length; i++) {
+            const pt = trkpts[i];
+            const lat = parseFloat(pt.getAttribute('lat'));
+            const lon = parseFloat(pt.getAttribute('lon'));
+            const eleNode = pt.getElementsByTagName('ele')[0];
+            const timeNode = pt.getElementsByTagName('time')[0];
+
+            const ele = eleNode ? parseFloat(eleNode.textContent) : null;
+            const time = timeNode ? new Date(timeNode.textContent) : null;
+
+            if (time && !isNaN(time.getTime())) {
+              if (!startTime) startTime = time;
+              endTime = time;
+            }
+
+            if (i > 0) {
+              const prev = trkpts[i - 1];
+              const pLat = parseFloat(prev.getAttribute('lat'));
+              const pLon = parseFloat(prev.getAttribute('lon'));
+              const pEleNode = prev.getElementsByTagName('ele')[0];
+              const pEle = pEleNode ? parseFloat(pEleNode.textContent) : null;
+
+              const R = 6371;
+              const dLat = toRad(lat - pLat);
+              const dLon = toRad(lon - pLon);
+              const a = Math.sin(dLat / 2) ** 2 +
+                        Math.cos(toRad(pLat)) * Math.cos(toRad(lat)) * Math.sin(dLon / 2) ** 2;
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              totalDistKm += R * c;
+
+              if (ele !== null && pEle !== null && (ele - pEle) > 1.5) {
+                totalAscentM += (ele - pEle);
+              }
+            }
+          }
+
+          const nameNode = xml.getElementsByTagName('name')[0];
+          if (nameNode && nameNode.textContent && !document.getElementById('act-title').value) {
+            document.getElementById('act-title').value = nameNode.textContent.trim();
+          }
+          if (startTime) {
+            document.getElementById('act-date').value = toDateStr(startTime);
+          }
+          if (startTime && endTime && endTime > startTime) {
+            const durMin = Math.max(1, Math.round((endTime - startTime) / 60000));
+            document.getElementById('act-duration').value = durMin;
+          }
+
+          document.getElementById('sd-distance').value = totalDistKm.toFixed(2);
+          document.getElementById('sd-elevation').value = Math.round(totalAscentM);
+          setActivityFormStatus('completed');
+          updateEndurancePace();
+
+          showToast(`GPX importé : ${totalDistKm.toFixed(2)} km (+${Math.round(totalAscentM)}m)`);
+        } catch (err) {
+          console.error(err);
+          showToast('Impossible de lire ce fichier GPX', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function openTemplatePicker() {
+      const sportId = document.getElementById('act-sport').value;
+      const list = document.getElementById('template-picker-list');
+
+      const sortedTemplates = [...state.data.templates].sort((a, b) => {
+        if (a.sportId === sportId && b.sportId !== sportId) return -1;
+        if (a.sportId !== sportId && b.sportId === sportId) return 1;
+        return 0;
+      });
+
+      if (sortedTemplates.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Aucun modèle enregistré dans l'onglet "Séances".</p>`;
+      } else {
+        list.innerHTML = sortedTemplates.map(tpl => {
+          const sp = getSport(tpl.sportId);
+          return `
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100/70">
+              <input type="checkbox" value="${tpl.id}" class="tpl-pick-checkbox mt-1 w-4 h-4 rounded accent-blue-600" />
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: ${sp.color}">${sp.name}</span>
+                  <span class="text-xs font-bold text-slate-900">${tpl.title}</span>
+                  <span class="text-[11px] text-slate-500 ml-auto font-medium">${tpl.duration} min</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1 line-clamp-2">${tpl.description}</p>
+              </div>
+            </label>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('modal-template-picker').classList.remove('hidden');
+    }
+
+    function applySelectedTemplates() {
+      const checkedIds = Array.from(document.querySelectorAll('.tpl-pick-checkbox:checked')).map(cb => cb.value);
+      if (checkedIds.length === 0) {
+        closeModal('modal-template-picker');
+        return;
+      }
+
+      const selectedTpls = state.data.templates.filter(t => checkedIds.includes(t.id));
+      const descEl = document.getElementById('act-description');
+      const titleEl = document.getElementById('act-title');
+      const durEl = document.getElementById('act-duration');
+
+      const addedText = selectedTpls.map(t => `• ${t.title} (${t.duration} min) :\n${t.description}`).join('\n\n');
+      descEl.value = descEl.value ? `${descEl.value}\n\n${addedText}` : addedText;
+
+      if (!titleEl.value) {
+        titleEl.value = selectedTpls.map(t => t.title).join(' + ');
+      }
+
+      const totalTplDuration = selectedTpls.reduce((sum, t) => sum + (Number(t.duration) || 0), 0);
+      durEl.value = totalTplDuration;
+      updateEndurancePace();
+
+      closeModal('modal-template-picker');
+      showToast(`${selectedTpls.length} modèle(s) ajouté(s)`);
+    }
+
+    function saveActivity(event) {
+      event.preventDefault();
+      const id = document.getElementById('act-id').value;
+      const sportId = document.getElementById('act-sport').value;
+      const sport = getSport(sportId);
+      const status = document.getElementById('form-activity').dataset.status || 'planned';
+
+      let smartData = {};
+      if (sport.category === 'endurance') {
+        smartData = {
+          distance: parseFloat(document.getElementById('sd-distance')?.value) || null,
+          elevation: parseInt(document.getElementById('sd-elevation')?.value, 10) || null
+        };
+      } else if (sport.category === 'strength') {
+        smartData = {
+          exercises: state.tempExercises.filter(ex => ex.name && ex.name.trim() !== '')
+        };
+      } else if (sport.category === 'racket') {
+        smartData = {
+          matchType: document.getElementById('sd-matchType')?.value || '',
+          opponent: document.getElementById('sd-opponent')?.value || '',
+          score: document.getElementById('sd-score')?.value || '',
+          tech: document.getElementById('sd-tech')?.value || ''
+        };
+      } else if (sport.category === 'equestrian') {
+        smartData = {
+          horse: document.getElementById('sd-horse')?.value || '',
+          discipline: document.getElementById('sd-discipline')?.value || '',
+          notes: document.getElementById('sd-notes')?.value || ''
+        };
+      } else {
+        smartData = {
+          customGoal: document.getElementById('sd-customGoal')?.value || ''
+        };
+      }
+
+      const activityObj = {
+        id: id || 'act_' + Date.now(),
+        sportId,
+        date: document.getElementById('act-date').value,
+        title: document.getElementById('act-title').value.trim(),
+        duration: parseInt(document.getElementById('act-duration').value, 10) || 30,
+        description: document.getElementById('act-description').value.trim(),
+        status,
+        feeling: status === 'completed' ? parseInt(document.getElementById('act-feeling').value, 10) : null,
+        comment: status === 'completed' ? document.getElementById('act-comment').value.trim() : '',
+        smartData
+      };
+
+      if (id) {
+        const idx = state.data.activities.findIndex(a => a.id === id);
+        if (idx !== -1) state.data.activities[idx] = activityObj;
+      } else {
+        state.data.activities.push(activityObj);
+      }
+
+      state.selectedDate = activityObj.date;
+      saveState();
+      closeModal('modal-activity');
+      refreshAllViews();
+      showToast(id ? 'Séance mise à jour' : 'Séance enregistrée');
+    }
+
+    function deleteActivity(id) {
+      askConfirm('Supprimer la séance', 'Cette activité sera définitivement supprimée de ton calendrier et de tes statistiques.', () => {
+        state.data.activities = state.data.activities.filter(a => a.id !== id);
+        saveState();
+        refreshAllViews();
+        showToast('Séance supprimée');
+      });
+    }
+
+    // --- VALIDATION D'UNE SÉANCE ---
+    function openValidateModal(id) {
+      const act = state.data.activities.find(a => a.id === id);
+      if (!act) return;
+      const sp = getSport(act.sportId);
+
+      document.getElementById('val-act-id').value = act.id;
+      document.getElementById('val-title').textContent = `${sp.name} — ${act.title}`;
+      document.getElementById('val-duration').value = act.duration;
+
+      const smartWrap = document.getElementById('val-smart-fields');
+      const sd = act.smartData || {};
+
+      if (sp.category === 'endurance') {
+        smartWrap.innerHTML = `
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Distance réelle (km)</label>
+              <input type="number" step="0.01" id="val-distance" value="${sd.distance || ''}" placeholder="10.0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Dénivelé D+ réel (m)</label>
+              <input type="number" id="val-elevation" value="${sd.elevation || ''}" placeholder="120" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none" />
+            </div>
+          </div>
+        `;
+      } else if (sp.category === 'strength') {
+        state.valExercises = sd.exercises ? JSON.parse(JSON.stringify(sd.exercises)) : [];
+        if (state.valExercises.length > 0) {
+          smartWrap.innerHTML = `
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+              <span class="block text-xs font-bold text-slate-700">Ajuster les charges / répétitions réalisées</span>
+              ${state.valExercises.map((ex, idx) => `
+                <div class="grid grid-cols-12 gap-1.5 items-center bg-white p-2 rounded-xl border border-slate-200">
+                  <span class="col-span-5 text-xs font-semibold text-slate-800 truncate">${ex.name}</span>
+                  <input type="number" value="${ex.sets}" onchange="state.valExercises[${idx}].sets = this.value" class="col-span-2 bg-slate-50 border border-slate-200 rounded-lg px-1 py-1 text-xs text-center" />
+                  <input type="number" value="${ex.reps}" onchange="state.valExercises[${idx}].reps = this.value" class="col-span-2 bg-slate-50 border border-slate-200 rounded-lg px-1 py-1 text-xs text-center" />
+                  <input type="number" step="0.5" placeholder="kg" value="${ex.weight || ''}" onchange="state.valExercises[${idx}].weight = this.value" class="col-span-3 bg-slate-50 border border-slate-200 rounded-lg px-1 py-1 text-xs text-center" />
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          smartWrap.innerHTML = '';
+        }
+      } else if (sp.category === 'racket') {
+        smartWrap.innerHTML = `
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Score final (optionnel)</label>
+            <input type="text" id="val-score" value="${sd.score || ''}" placeholder="Ex: 6/4 6/3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none" />
+          </div>
+        `;
+      } else {
+        smartWrap.innerHTML = '';
+      }
+
+      document.getElementById('val-feeling').value = 8;
+      document.getElementById('val-feeling-display').textContent = '8 / 10';
+      document.getElementById('val-comment').value = '';
+
+      document.getElementById('modal-validate').classList.remove('hidden');
+    }
+
+    function confirmValidation(event) {
+      event.preventDefault();
+      const id = document.getElementById('val-act-id').value;
+      const act = state.data.activities.find(a => a.id === id);
+      if (!act) return;
+
+      const sp = getSport(act.sportId);
+      act.status = 'completed';
+      act.duration = parseInt(document.getElementById('val-duration').value, 10) || act.duration;
+      act.feeling = parseInt(document.getElementById('val-feeling').value, 10);
+      act.comment = document.getElementById('val-comment').value.trim();
+
+      if (!act.smartData) act.smartData = {};
+      if (sp.category === 'endurance') {
+        const distVal = parseFloat(document.getElementById('val-distance')?.value);
+        const elevVal = parseInt(document.getElementById('val-elevation')?.value, 10);
+        if (!isNaN(distVal)) act.smartData.distance = distVal;
+        if (!isNaN(elevVal)) act.smartData.elevation = elevVal;
+      } else if (sp.category === 'strength' && state.valExercises.length) {
+        act.smartData.exercises = state.valExercises;
+      } else if (sp.category === 'racket') {
+        const scoreEl = document.getElementById('val-score');
+        if (scoreEl) act.smartData.score = scoreEl.value.trim();
+      }
+
+      saveState();
+      closeModal('modal-validate');
+      refreshAllViews();
+      showToast('Séance validée !');
+    }
+
+    // --- ONGLET 3 : SÉANCES TYPES ---
+    function setTemplatesSportFilter(sportId) {
+      state.filterTemplatesSport = sportId;
+      renderTemplates();
+    }
+
+    function renderTemplates() {
+      renderSportFilterPills('templates-sport-filters', state.filterTemplatesSport, 'setTemplatesSportFilter');
+
+      const filtered = state.data.templates.filter(t =>
+        state.filterTemplatesSport === 'all' || t.sportId === state.filterTemplatesSport
+      );
+
+      const list = document.getElementById('list-templates');
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="p-6 rounded-2xl bg-white border border-dashed border-slate-200 text-center text-xs text-slate-400">Aucun modèle de séance pour ce sport. Clique sur « + Nouveau modèle » pour en créer un !</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(tpl => {
+        const sp = getSport(tpl.sportId);
+        return `
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 shadow-2xs">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold text-white" style="background-color: ${sp.color}">${sp.name}</span>
+                  <span class="text-xs text-slate-500 font-medium">⏱ ${formatDuration(tpl.duration)}</span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 mt-1">${tpl.title}</h4>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <button onclick="duplicateTemplate('${tpl.id}')" title="Dupliquer" class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+                <button onclick="openTemplateModal('${tpl.id}')" title="Modifier" class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button onclick="deleteTemplate('${tpl.id}')" title="Supprimer" class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-red-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">${tpl.description}</p>
+
+            <button onclick="planFromTemplate('${tpl.id}')" class="w-full py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition">
+              + Planifier cette séance
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openTemplateModal(tplId = null) {
+      const tpl = tplId ? state.data.templates.find(t => t.id === tplId) : null;
+      document.getElementById('modal-template-title').textContent = tpl ? 'Modifier le modèle' : 'Nouveau modèle de séance';
+      document.getElementById('tpl-id').value = tpl ? tpl.id : '';
+
+      const defaultSport = tpl ? tpl.sportId : (state.filterTemplatesSport !== 'all' ? state.filterTemplatesSport : state.data.sports[0].id);
+      populateSportSelect('tpl-sport', defaultSport);
+
+      document.getElementById('tpl-duration').value = tpl ? tpl.duration : 45;
+      document.getElementById('tpl-title').value = tpl ? tpl.title : '';
+      document.getElementById('tpl-description').value = tpl ? tpl.description : '';
+
+      document.getElementById('modal-template').classList.remove('hidden');
+    }
+
+    function saveTemplate(event) {
+      event.preventDefault();
+      const id = document.getElementById('tpl-id').value;
+      const obj = {
+        id: id || 'tpl_' + Date.now(),
+        sportId: document.getElementById('tpl-sport').value,
+        duration: parseInt(document.getElementById('tpl-duration').value, 10) || 30,
+        title: document.getElementById('tpl-title').value.trim(),
+        description: document.getElementById('tpl-description').value.trim()
+      };
+
+      if (id) {
+        const idx = state.data.templates.findIndex(t => t.id === id);
+        if (idx !== -1) state.data.templates[idx] = obj;
+      } else {
+        state.data.templates.push(obj);
+      }
+
+      saveState();
+      closeModal('modal-template');
+      renderTemplates();
+      showToast('Modèle sauvegardé');
+    }
+
+    function duplicateTemplate(id) {
+      const orig = state.data.templates.find(t => t.id === id);
+      if (!orig) return;
+      state.data.templates.push({
+        ...orig,
+        id: 'tpl_' + Date.now(),
+        title: `${orig.title} (copie)`
+      });
+      saveState();
+      renderTemplates();
+      showToast('Modèle dupliqué');
+    }
+
+    function deleteTemplate(id) {
+      askConfirm('Supprimer ce modèle', 'Veux-tu vraiment supprimer cette séance type ?', () => {
+        state.data.templates = state.data.templates.filter(t => t.id !== id);
+        saveState();
+        renderTemplates();
+        showToast('Modèle supprimé');
+      });
+    }
+
+    function planFromTemplate(tplId) {
+      const tpl = state.data.templates.find(t => t.id === tplId);
+      if (!tpl) return;
+      openActivityModal(null, state.selectedDate);
+      document.getElementById('act-sport').value = tpl.sportId;
+      onActivitySportChange();
+      document.getElementById('act-title').value = tpl.title;
+      document.getElementById('act-duration').value = tpl.duration;
+      document.getElementById('act-description').value = tpl.description;
+    }
+
+    // --- ONGLET 4 : STATISTIQUES ---
+    function initAndRenderStats() {
+      const monthSel = document.getElementById('stats-month-select');
+      const sportSel = document.getElementById('stats-sport-select');
+
+      const currentMonth = TODAY_STR.slice(0, 7);
+      const monthsSet = new Set([currentMonth]);
+      state.data.activities.forEach(a => monthsSet.add(a.date.slice(0, 7)));
+
+      const sortedMonths = Array.from(monthsSet).sort().reverse();
+      const prevMonthVal = monthSel.value || currentMonth;
+
+      monthSel.innerHTML = [
+        `<option value="all">Tous les mois</option>`,
+        ...sortedMonths.map(ym => {
+          const [y, m] = ym.split('-').map(Number);
+          const label = new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+          return `<option value="${ym}" ${ym === prevMonthVal ? 'selected' : ''}>${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
+        })
+      ].join('');
+
+      const prevSportVal = sportSel.value || 'all';
+      sportSel.innerHTML = [
+        `<option value="all">Tous les sports</option>`,
+        ...state.data.sports.map(sp => `<option value="${sp.id}" ${sp.id === prevSportVal ? 'selected' : ''}>${sp.name}</option>`)
+      ].join('');
+
+      renderStats();
+    }
+
+    function renderStats() {
+      const monthFilter = document.getElementById('stats-month-select').value;
+      const sportFilter = document.getElementById('stats-sport-select').value;
+
+      const matching = state.data.activities.filter(a => {
+        const matchMonth = monthFilter === 'all' || a.date.startsWith(monthFilter);
+        const matchSport = sportFilter === 'all' || a.sportId === sportFilter;
+        return matchMonth && matchSport;
+      });
+
+      const completed = matching
+        .filter(a => a.status === 'completed')
+        .sort((a, b) => b.date.localeCompare(a.date));
+      const plannedCount = matching.filter(a => a.status === 'planned').length;
+
+      // 1. Nombre de séances réalisées
+      document.getElementById('stat-total-sessions').textContent = completed.length;
+      document.getElementById('stat-planned-sub').textContent = `${plannedCount} prévue(s) sur la période`;
+
+      // 2. Temps total d'entraînement
+      const totalMin = completed.reduce((s, a) => s + (Number(a.duration) || 0), 0);
+      const avgMin = completed.length ? Math.round(totalMin / completed.length) : 0;
+      document.getElementById('stat-total-time').textContent = formatDuration(totalMin);
+      document.getElementById('stat-avg-duration').textContent = `Moy. ${avgMin} min / séance`;
+
+      // 3. Ressenti moyen (/10)
+      const rated = completed.filter(a => typeof a.feeling === 'number');
+      if (rated.length) {
+        const avgFeel = (rated.reduce((s, a) => s + a.feeling, 0) / rated.length).toFixed(1);
+        document.getElementById('stat-avg-feeling').innerHTML = `${avgFeel} <span class="text-sm font-normal text-slate-400">/10</span>`;
+        document.getElementById('stat-feeling-sub').textContent = `Sur ${rated.length} séance(s) notée(s)`;
+      } else {
+        document.getElementById('stat-avg-feeling').innerHTML = `— <span class="text-sm font-normal text-slate-400">/10</span>`;
+        document.getElementById('stat-feeling-sub').textContent = `Aucune séance notée`;
+      }
+
+      // 4. Carte Distance & D+ : UNIQUEMENT visible si "Tous les sports", "Running" ou "Vélo"
+      const distCard = document.getElementById('stat-card-distance');
+      const feelingCard = document.getElementById('stat-card-feeling');
+      const showDistanceCard = sportFilter === 'all' || DISTANCE_SPORTS.includes(sportFilter);
+
+      if (showDistanceCard) {
+        distCard.classList.remove('hidden');
+        feelingCard.classList.remove('col-span-2');
+
+        const runBikeActivities = completed.filter(a => DISTANCE_SPORTS.includes(a.sportId));
+        const totalDist = runBikeActivities.reduce((s, a) => s + (Number(a.smartData?.distance) || 0), 0);
+        const totalElev = runBikeActivities.reduce((s, a) => s + (Number(a.smartData?.elevation) || 0), 0);
+
+        document.getElementById('stat-total-distance').textContent = `${totalDist.toFixed(1)} km`;
+        document.getElementById('stat-total-elevation').textContent =
+          sportFilter === 'all' ? `+${totalElev} m D+ (Run & Vélo)` : `+${totalElev} m de dénivelé`;
+      } else {
+        distCard.classList.add('hidden');
+        feelingCard.classList.add('col-span-2');
+      }
+
+      // 5. Section "Répartition par sport" : UNIQUEMENT affichée lorsque filtre = "Tous les sports"
+      const breakdownSection = document.getElementById('stats-breakdown-section');
+      const breakdownEl = document.getElementById('stats-sport-breakdown');
+
+      if (sportFilter === 'all') {
+        breakdownSection.classList.remove('hidden');
+        if (completed.length === 0) {
+          breakdownEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Valide des séances pour voir ta répartition par sport.</p>`;
+        } else {
+          const bySport = {};
+          completed.forEach(a => {
+            if (!bySport[a.sportId]) bySport[a.sportId] = { count: 0, minutes: 0, dist: 0 };
+            bySport[a.sportId].count += 1;
+            bySport[a.sportId].minutes += Number(a.duration) || 0;
+            if (DISTANCE_SPORTS.includes(a.sportId)) {
+              bySport[a.sportId].dist += Number(a.smartData?.distance) || 0;
+            }
+          });
+
+          const sortedSports = Object.entries(bySport).sort((a, b) => b[1].minutes - a[1].minutes);
+
+          breakdownEl.innerHTML = sortedSports.map(([sId, info]) => {
+            const sp = getSport(sId);
+            const pct = totalMin > 0 ? Math.round((info.minutes / totalMin) * 100) : Math.round((info.count / completed.length) * 100);
+            return `
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${sp.color}"></span>
+                    <span class="font-bold text-slate-900">${sp.name}</span>
+                    <span class="text-slate-500">(${info.count} séance${info.count > 1 ? 's' : ''})</span>
+                  </div>
+                  <div class="text-right font-bold text-slate-800">
+                    ${formatDuration(info.minutes)} ${info.dist > 0 ? `<span class="text-slate-500 font-medium">• ${info.dist.toFixed(1)} km</span>` : ''}
+                  </div>
+                </div>
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-500" style="width: ${Math.max(4, pct)}%; background-color: ${sp.color}"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } else {
+        breakdownSection.classList.add('hidden');
+      }
+
+      // 6. Historique filtré des séances réalisées en bas de page
+      document.getElementById('stats-history-count').textContent = completed.length;
+      const historyEl = document.getElementById('stats-history-list');
+      if (completed.length === 0) {
+        historyEl.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-dashed border-slate-200 text-center text-xs text-slate-400">Aucune séance réalisée sur cette sélection.</div>`;
+      } else {
+        historyEl.innerHTML = completed.map(a => renderActivityCardHTML(a, true)).join('');
+      }
+    }
+
+    // --- GESTION DES SPORTS PERSONNALISÉS ---
+    function openCustomSportModal() {
+      renderSettingsSportsList();
+      document.getElementById('modal-custom-sport').classList.remove('hidden');
+    }
+
+    function renderSettingsSportsList() {
+      const list = document.getElementById('settings-sports-list');
+      list.innerHTML = state.data.sports.map(sp => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
+          <span class="w-2 h-2 rounded-full" style="background-color: ${sp.color}"></span>
+          <span>${sp.name}</span>
+        </span>
+      `).join('');
+    }
+
+    function addCustomSport(event) {
+      event.preventDefault();
+      const nameInput = document.getElementById('custom-sport-name');
+      const colorInput = document.getElementById('custom-sport-color');
+      const catInput = document.getElementById('custom-sport-category');
+
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-3);
+
+      state.data.sports.push({
+        id,
+        name,
+        color: colorInput.value,
+        category: catInput.value
+      });
+
+      nameInput.value = '';
+      saveState();
+      renderSettingsSportsList();
+      refreshAllViews();
+      showToast(`Sport "${name}" ajouté !`);
+    }
+
+    function refreshAllViews() {
+      renderCalendar();
+      renderActivities();
+      renderTemplates();
+      if (state.activeTab === 'stats') initAndRenderStats();
+    }
+
+    // --- DÉMARRAGE ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      switchTab('calendar');
+    });
+  </script>
+</body>
+</html>
