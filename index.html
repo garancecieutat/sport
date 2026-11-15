@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SportTrack" />
+  <title>SportTrack — Suivi Multi-Sports</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --card: #FFFFFF;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --muted: #64748B;
+      --primary: #2563EB;
+      --primary-light: #EFF6FF;
+      --success: #10B981;
+      --success-light: #ECFDF5;
+      --danger: #EF4444;
+      --radius: 16px;
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: calc(84px + var(--safe-bottom));
+      overscroll-behavior-y: none;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(248, 250, 252, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary:active {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--danger);
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+
+    /* Main container */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .tab-view {
+      display: none;
+    }
+    .tab-view.active {
+      display: block;
+    }
+
+    /* Cards & Pills */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .sport-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: #fff;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .status-planned {
+      background: #FEF3C7;
+      color: #B45309;
+    }
+    .status-done {
+      background: var(--success-light);
+      color: #047857;
+    }
+
+    /* Filters bar */
+    .filter-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip.active {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Segmented control */
+    .segmented {
+      display: flex;
+      background: #E2E8F0;
+      padding: 3px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .segmented button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 9px;
+      cursor: pointer;
+    }
+    .segmented button.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Calendar */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .cal-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .cal-weekday {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      padding-bottom: 6px;
+    }
+    .cal-day {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      min-height: 54px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .cal-day.other-month {
+      opacity: 0.4;
+    }
+    .cal-day.selected {
+      border: 2px solid var(--primary);
+      background: var(--primary-light);
+    }
+    .cal-day.today .day-num {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .day-num {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dots-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .cal-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .cal-dot.planned {
+      background: transparent !important;
+      border: 2px solid;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .bar-row {
+      margin-bottom: 10px;
+    }
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .bar-track {
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    /* Bottom Navigation */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 4px calc(8px + var(--safe-bottom));
+    }
+    nav.bottom-nav button {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      flex: 1;
+    }
+    nav.bottom-nav button.active {
+      color: var(--primary);
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-sheet {
+      background: var(--card);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 20px 18px calc(24px + var(--safe-bottom));
+      animation: slideUp 0.2s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .exo-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .exo-row input {
+      padding: 8px;
+      font-size: 13px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 16px 0 10px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 id="header-title">Calendrier</h1>
+    <button class="btn-primary" id="header-action-btn">+ Activité</button>
+  </header>
+
+  <main>
+    <!-- TAB 1: CALENDRIER -->
+    <section id="tab-calendar" class="tab-view active">
+      <div class="segmented">
+        <button id="btn-view-week" class="active" onclick="setCalendarMode('week')">Semaine</button>
+        <button id="btn-view-month" onclick="setCalendarMode('month')">Mois</button>
+      </div>
+
+      <div class="card">
+        <div class="cal-header">
+          <button class="btn-secondary" onclick="navigateCalendar(-1)">◀</button>
+          <h2 id="cal-period-label">Novembre 2026</h2>
+          <button class="btn-secondary" onclick="navigateCalendar(1)">▶</button>
+        </div>
+        <div class="cal-grid" id="cal-weekdays">
+          <div class="cal-weekday">Lun</div>
+          <div class="cal-weekday">Mar</div>
+          <div class="cal-weekday">Mer</div>
+          <div class="cal-weekday">Jeu</div>
+          <div class="cal-weekday">Ven</div>
+          <div class="cal-weekday">Sam</div>
+          <div class="cal-weekday">Dim</div>
+        </div>
+        <div class="cal-grid" id="cal-days"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin: 14px 0 8px;">
+        <h3 id="selected-day-title" style="font-size:15px; font-weight:700;">Séances du jour</h3>
+        <button class="btn-primary" style="padding:6px 12px; font-size:13px;" onclick="openActivityModal(null, state.selectedDate)">+ Planifier</button>
+      </div>
+      <div id="calendar-day-list"></div>
+    </section>
+
+    <!-- TAB 2: ACTIVITÉS -->
+    <section id="tab-activities" class="tab-view">
+      <div class="filter-scroll" id="activities-sport-filters"></div>
+
+      <div class="section-title">À venir</div>
+      <div id="activities-upcoming"></div>
+
+      <div class="section-title">Passées / Réalisées</div>
+      <div id="activities-past"></div>
+    </section>
+
+    <!-- TAB 3: SÉANCES TYPES -->
+    <section id="tab-templates" class="tab-view">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="filter-scroll" id="templates-sport-filters" style="margin-bottom:0; flex:1;"></div>
+        <button class="btn-secondary" style="margin-left:8px; white-space:nowrap;" onclick="openSportModal()">+ Sport</button>
+      </div>
+      <div id="templates-list"></div>
+    </section>
+
+    <!-- TAB 4: STATS -->
+    <section id="tab-stats" class="tab-view">
+      <div class="row-2" style="margin-bottom:12px;">
+        <select id="stats-month-filter" onchange="renderStats()"></select>
+        <select id="stats-sport-filter" onchange="renderStats()"></select>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Séances réalisées</div>
+          <div class="stat-val" id="stat-count">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Temps total</div>
+          <div class="stat-val" id="stat-time">0h 00</div>
+        </div>
+        <div class="stat-box" id="stat-distance-box">
+          <div class="stat-label">Distance & D+</div>
+          <div class="stat-val" id="stat-dist">0 km</div>
+          <div class="stat-sub" id="stat-elev">0 m D+</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Ressenti moyen</div>
+          <div class="stat-val" id="stat-rpe">- / 10</div>
+        </div>
+      </div>
+
+      <div class="card" id="stats-repartition-card">
+        <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">Répartition par sport</h3>
+        <div id="stats-repartition-bars"></div>
+      </div>
+
+      <div class="section-title">Historique des séances réalisées</div>
+      <div id="stats-history-list"></div>
+    </section>
+  </main>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav">
+    <button class="active" onclick="switchTab('calendar', this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Calendrier</span>
+    </button>
+    <button onclick="switchTab('activities', this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Activités</span>
+    </button>
+    <button onclick="switchTab('templates', this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Séances</span>
+    </button>
+    <button onclick="switchTab('stats', this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Stats</span>
+    </button>
+  </nav>
+
+  <!-- MODAL ACTIVITÉ -->
+  <div class="modal-backdrop" id="modal-activity">
+    <div class="modal-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 id="modal-act-title" style="font-size:18px; font-weight:700;">Planifier une activité</h2>
+        <button class="btn-secondary" onclick="closeModal('modal-activity')">Fermer</button>
+      </div>
+
+      <form id="form-activity" onsubmit="saveActivity(event)">
+        <input type="hidden" id="act-id" />
+
+        <div class="row-2">
+          <div class="form-group">
+            <label>Sport</label>
+            <select id="act-sport" onchange="onActivitySportChange()" required></select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="act-date" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="act-status" onchange="toggleCompletionFields()">
+            <option value="planned">Prévue (à venir)</option>
+            <option value="done">Réalisée</option>
+          </select>
+        </div>
+
+        <!-- Import GPX pour Running / Vélo -->
+        <div id="gpx-import-box" class="form-group" style="display:none; background:var(--primary-light); padding:10px 12px; border-radius:12px;">
+          <label style="color:var(--primary); margin-bottom:4px;">Importer un fichier .GPX (Garmin / Strava)</label>
+          <input type="file" accept=".gpx" onchange="handleGpxUpload(event)" style="background:#fff; font-size:13px;" />
+        </div>
+
+        <div class="form-group">
+          <label>Titre de la séance</label>
+          <input type="text" id="act-title" placeholder="Ex: Sortie longue, Fractionné..." required />
+        </div>
+
+        <div class="form-group">
+          <label>Ajouter depuis mes séances types (optionnel)</label>
+          <div style="display:flex; gap:8px;">
+            <select id="act-template-picker"></select>
+            <button type="button" class="btn-secondary" onclick="appendTemplateToActivity()">+ Insérer</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Contenu / Description</label>
+          <textarea id="act-content" rows="3" placeholder="Détails de l'entraînement..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Durée (minutes)</label>
+          <input type="number" id="act-duration" min="1" placeholder="45" required />
+        </div>
+
+        <!-- Champs intelligents dynamiques -->
+        <div id="smart-fields-container"></div>
+
+        <!-- Champs de validation (Ressenti & Commentaire) -->
+        <div id="completion-fields" style="display:none; border-top:1px solid var(--border); padding-top:14px; margin-top:14px;">
+          <div class="form-group">
+            <label>Note de ressenti / Effort (1 à 10)</label>
+            <input type="number" id="act-rpe" min="1" max="10" placeholder="7" />
+          </div>
+          <div class="form-group">
+            <label>Commentaire bilan</label>
+            <textarea id="act-comment" rows="2" placeholder="Sensations, météo, points positifs..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:18px;">
+          <button type="button" id="btn-delete-act" class="btn-danger-ghost" style="display:none;" onclick="deleteCurrentActivity()">Supprimer</button>
+          <button type="submit" class="btn-primary" style="flex:1; justify-content:center; padding:12px;">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SÉANCE TYPE -->
+  <div class="modal-backdrop" id="modal-template">
+    <div class="modal-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 id="modal-tpl-title" style="font-size:18px; font-weight:700;">Nouvelle séance type</h2>
+        <button class="btn-secondary" onclick="closeModal('modal-template')">Fermer</button>
+      </div>
+
+      <form onsubmit="saveTemplate(event)">
+        <input type="hidden" id="tpl-id" />
+        <div class="row-2">
+          <div class="form-group">
+            <label>Sport</label>
+            <select id="tpl-sport" required></select>
+          </div>
+          <div class="form-group">
+            <label>Durée estimée (min)</label>
+            <input type="number" id="tpl-duration" min="1" placeholder="45" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Titre du modèle</label>
+          <input type="text" id="tpl-title" placeholder="Ex: Fractionné court 5x400m" required />
+        </div>
+        <div class="form-group">
+          <label>Description détaillée</label>
+          <textarea id="tpl-desc" rows="4" placeholder="15 min échauffement + 5x400m à 6min/km + 10 min retour au calme" required></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:12px;">Enregistrer le modèle</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL AJOUT SPORT -->
+  <div class="modal-backdrop" id="modal-sport">
+    <div class="modal-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="font-size:18px; font-weight:700;">Ajouter un sport</h2>
+        <button class="btn-secondary" onclick="closeModal('modal-sport')">Fermer</button>
+      </div>
+      <form onsubmit="saveCustomSport(event)">
+        <div class="form-group">
+          <label>Nom du sport</label>
+          <input type="text" id="new-sport-name" placeholder="Ex: Natation, Yoga, Escalade..." required />
+        </div>
+        <div class="form-group">
+          <label>Couleur</label>
+          <input type="color" id="new-sport-color" value="#EC4899" style="height:44px; padding:4px;" />
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:12px;">Ajouter</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- DONNÉES INITIALES & STOCKAGE ---
+    const DEFAULT_SPORTS = [
+      { id: 'equitation', name: 'Équitation', color: '#D97706' },
+      { id: 'running', name: 'Running', color: '#2563EB' },
+      { id: 'velo', name: 'Vélo', color: '#059669' },
+      { id: 'renforcement', name: 'Renforcement', color: '#7C3AED' },
+      { id: 'tennis', name: 'Tennis', color: '#EA580C' },
+      { id: 'badminton', name: 'Badminton', color: '#0891B2' }
+    ];
+
+    const DEFAULT_TEMPLATES = [
+      {
+        id: 'tpl-1',
+        sportId: 'running',
+        title: 'Fractionné court',
+        duration: 45,
+        description: '15 min échauffement + 5x400m à 6min/km (récup 1min30) + 10 min retour au calme'
+      },
+      {
+        id: 'tpl-2',
+        sportId: 'renforcement',
+        title: 'Gainage & Bas du corps',
+        duration: 40,
+        description: 'Squats, fentes, chaise et gainage abdominal 3 séries'
+      }
+    ];
+
+    function todayISO() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    let state = {
+      sports: DEFAULT_SPORTS,
+      activities: [],
+      templates: DEFAULT_TEMPLATES,
+      selectedDate: todayISO(),
+      calDate: new Date(),
+      calMode: 'week',
+      actFilterSport: 'all',
+      tplFilterSport: 'all',
+      currentExercises: []
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('sporttrack_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.sports) state.sports = parsed.sports;
+          if (parsed.activities) state.activities = parsed.activities;
+          if (parsed.templates) state.templates = parsed.templates;
+        }
+      } catch (e) {
+        console.warn('Stockage local indisponible', e);
+      }
+    }
+
+    function persistState() {
+      try {
+        localStorage.setItem('sporttrack_v1', JSON.stringify({
+          sports: state.sports,
+          activities: state.activities,
+          templates: state.templates
+        }));
+      } catch (e) {
+        console.warn('Erreur sauvegarde', e);
+      }
+    }
+
+    function getSport(id) {
+      return state.sports.find(s => s.id === id) || { id, name: id, color: '#64748B' };
+    }
+
+    // --- NAVIGATION ---
+    function switchTab(tabName, btn) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+
+      document.querySelectorAll('nav.bottom-nav button').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const titles = {
+        calendar: 'Calendrier',
+        activities: 'Activités',
+        templates: 'Séances types',
+        stats: 'Statistiques'
+      };
+      document.getElementById('header-title').textContent = titles[tabName];
+
+      const headerBtn = document.getElementById('header-action-btn');
+      if (tabName === 'templates') {
+        headerBtn.textContent = '+ Modèle';
+        headerBtn.style.display = 'inline-flex';
+        headerBtn.onclick = () => openTemplateModal();
+      } else if (tabName === 'stats') {
+        headerBtn.style.display = 'none';
+      } else {
+        headerBtn.textContent = '+ Activité';
+        headerBtn.style.display = 'inline-flex';
+        headerBtn.onclick = () => openActivityModal();
+      }
+
+      if (tabName === 'calendar') renderCalendar();
+      if (tabName === 'activities') renderActivities();
+      if (tabName === 'templates') renderTemplates();
+      if (tabName === 'stats') {
+        populateStatsFilters();
+        renderStats();
+      }
+    }
+
+    // --- CALENDRIER ---
+    function setCalendarMode(mode) {
+      state.calMode = mode;
+      document.getElementById('btn-view-week').classList.toggle('active', mode === 'week');
+      document.getElementById('btn-view-month').classList.toggle('active', mode === 'month');
+      renderCalendar();
+    }
+
+    function navigateCalendar(dir) {
+      const d = new Date(state.calDate);
+      if (state.calMode === 'week') {
+        d.setDate(d.getDate() + dir * 7);
+      } else {
+        d.setMonth(d.getMonth() + dir);
+      }
+      state.calDate = d;
+      renderCalendar();
+    }
+
+    function formatDateKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function renderCalendar() {
+      const label = document.getElementById('cal-period-label');
+      const container = document.getElementById('cal-days');
+      container.innerHTML = '';
+
+      const ref = new Date(state.calDate);
+      label.textContent = ref.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+      let days = [];
+      if (state.calMode === 'week') {
+        const dayOfWeek = (ref.getDay() + 6) % 7; // Lundi = 0
+        const monday = new Date(ref);
+        monday.setDate(ref.getDate() - dayOfWeek);
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          days.push({ date: d, otherMonth: false });
+        }
+      } else {
+        const year = ref.getFullYear();
+        const month = ref.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+        const startDate = new Date(year, month, 1 - startOffset);
+        for (let i = 0; i < 35; i++) {
+          const d = new Date(startDate);
+          d.setDate(startDate.getDate() + i);
+          days.push({ date: d, otherMonth: d.getMonth() !== month });
+        }
+      }
+
+      const todayStr = todayISO();
+
+      days.forEach(item => {
+        const key = formatDateKey(item.date);
+        const dayActs = state.activities.filter(a => a.date === key);
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-day' +
+          (item.otherMonth ? ' other-month' : '') +
+          (key === state.selectedDate ? ' selected' : '') +
+          (key === todayStr ? ' today' : '');
+
+        cell.onclick = () => {
+          state.selectedDate = key;
+          renderCalendar();
+        };
+
+        const dotsHtml = dayActs.map(a => {
+          const sp = getSport(a.sportId);
+          if (a.status === 'planned') {
+            return `<span class="cal-dot planned" style="border-color:${sp.color}"></span>`;
+          }
+          return `<span class="cal-dot" style="background:${sp.color}"></span>`;
+        }).join('');
+
+        cell.innerHTML = `
+          <span class="day-num">${item.date.getDate()}</span>
+          <div class="dots-row">${dotsHtml}</div>
+        `;
+        container.appendChild(cell);
+      });
+
+      // Détail du jour sélectionné
+      const selDateObj = new Date(state.selectedDate + 'T00:00:00');
+      document.getElementById('selected-day-title').textContent =
+        'Séances du ' + selDateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+      const listEl = document.getElementById('calendar-day-list');
+      const selActs = state.activities.filter(a => a.date === state.selectedDate);
+      if (selActs.length === 0) {
+        listEl.innerHTML = `<div class="card empty-state">Aucune séance prévue ou réalisée ce jour.</div>`;
+      } else {
+        listEl.innerHTML = selActs.map(a => renderActivityCard(a)).join('');
+      }
+    }
+
+    // --- ACTIVITÉS ---
+    function renderActivities() {
+      const filterBar = document.getElementById('activities-sport-filters');
+      filterBar.innerHTML = `<button class="chip ${state.actFilterSport === 'all' ? 'active' : ''}" onclick="setActFilter('all')">Tous</button>` +
+        state.sports.map(s => `
+          <button class="chip ${state.actFilterSport === s.id ? 'active' : ''}" onclick="setActFilter('${s.id}')">
+            <span class="dot" style="background:${s.color}"></span>${s.name}
+          </button>
+        `).join('');
+
+      let filtered = state.activities;
+      if (state.actFilterSport !== 'all') {
+        filtered = filtered.filter(a => a.sportId === state.actFilterSport);
+      }
+
+      const upcoming = filtered
+        .filter(a => a.status === 'planned')
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const past = filtered
+        .filter(a => a.status === 'done')
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      document.getElementById('activities-upcoming').innerHTML = upcoming.length
+        ? upcoming.map(a => renderActivityCard(a)).join('')
+        : `<div class="card empty-state">Aucune séance à venir.</div>`;
+
+      document.getElementById('activities-past').innerHTML = past.length
+        ? past.map(a => renderActivityCard(a)).join('')
+        : `<div class="card empty-state">Aucune séance réalisée enregistrée.</div>`;
+    }
+
+    function setActFilter(sportId) {
+      state.actFilterSport = sportId;
+      renderActivities();
+    }
+
+    function renderActivityCard(act) {
+      const sp = getSport(act.sportId);
+      const dateFormatted = new Date(act.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+      let metaParts = [`⏱ ${act.duration} min`];
+      if ((act.sportId === 'running' || act.sportId === 'velo') && act.details) {
+        if (act.details.distance) metaParts.push(`📏 ${act.details.distance} km`);
+        if (act.details.elevation) metaParts.push(`⛰️ ${act.details.elevation} m D+`);
+        if (act.details.distance && act.duration) {
+          if (act.sportId === 'running') {
+            const pace = act.duration / act.details.distance;
+            const min = Math.floor(pace);
+            const sec = Math.round((pace - min) * 60);
+            metaParts.push(`⚡ ${min}'${String(sec).padStart(2, '0')}/km`);
+          } else {
+            const speed = (act.details.distance / (act.duration / 60)).toFixed(1);
+            metaParts.push(`⚡ ${speed} km/h`);
+          }
+        }
+      }
+      if (act.sportId === 'equitation' && act.details?.horse) {
+        metaParts.push(`🐴 ${act.details.horse} (${act.details.discipline || ''})`);
+      }
+      if ((act.sportId === 'tennis' || act.sportId === 'badminton') && act.details?.matchType) {
+        metaParts.push(`🎾 ${act.details.matchType}${act.details.score ? ' • ' + act.details.score : ''}`);
+      }
+      if (act.sportId === 'renforcement' && act.details?.exercises?.length) {
+        metaParts.push(`🏋️ ${act.details.exercises.length} exo(s)`);
+      }
+      if (act.status === 'done' && act.rpe) {
+        metaParts.push(`💪 ${act.rpe}/10`);
+      }
+
+      return `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span class="sport-badge" style="background:${sp.color}">${sp.name}</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">${dateFormatted}</span>
+              <span class="status-pill ${act.status === 'done' ? 'status-done' : 'status-planned'}">
+                ${act.status === 'done' ? 'Réalisée' : 'Prévue'}
+              </span>
+            </div>
+          </div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:4px;">${escapeHtml(act.title)}</div>
+          <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">${metaParts.join('  •  ')}</div>
+          ${act.content ? `<div style="font-size:13px; background:var(--bg); padding:8px 10px; border-radius:10px; white-space:pre-line; margin-bottom:10px;">${escapeHtml(act.content)}</div>` : ''}
+          ${act.comment ? `<div style="font-size:12px; font-style:italic; color:var(--muted); margin-bottom:10px;">« ${escapeHtml(act.comment)} »</div>` : ''}
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn-secondary" onclick="openActivityModal('${act.id}')">Modifier</button>
+            ${act.status === 'planned' ? `<button class="btn-success" onclick="quickValidateActivity('${act.id}')">✓ Valider la séance</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- MODALE ACTIVITÉ & CHAMPS INTELLIGENTS ---
+    function openActivityModal(actId = null, presetDate = null) {
+      const form = document.getElementById('form-activity');
+      form.reset();
+      document.getElementById('act-id').value = '';
+      document.getElementById('btn-delete-act').style.display = 'none';
+      state.currentExercises = [];
+
+      const sportSelect = document.getElementById('act-sport');
+      sportSelect.innerHTML = state.sports.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+      if (actId) {
+        const act = state.activities.find(a => a.id === actId);
+        if (!act) return;
+        document.getElementById('modal-act-title').textContent = 'Modifier la séance';
+        document.getElementById('act-id').value = act.id;
+        sportSelect.value = act.sportId;
+        document.getElementById('act-date').value = act.date;
+        document.getElementById('act-status').value = act.status;
+        document.getElementById('act-title').value = act.title;
+        document.getElementById('act-content').value = act.content || '';
+        document.getElementById('act-duration').value = act.duration;
+        document.getElementById('act-rpe').value = act.rpe || '';
+        document.getElementById('act-comment').value = act.comment || '';
+        document.getElementById('btn-delete-act').style.display = 'inline-block';
+
+        onActivitySportChange(act.details || {});
+      } else {
+        document.getElementById('modal-act-title').textContent = 'Planifier une activité';
+        document.getElementById('act-date').value = presetDate || state.selectedDate || todayISO();
+        document.getElementById('act-status').value = 'planned';
+        onActivitySportChange({});
+      }
+
+      toggleCompletionFields();
+      document.getElementById('modal-activity').classList.add('open');
+    }
+
+    function quickValidateActivity(actId) {
+      openActivityModal(actId);
+      document.getElementById('modal-act-title').textContent = 'Valider la séance réalisée';
+      document.getElementById('act-status').value = 'done';
+      toggleCompletionFields();
+    }
+
+    function toggleCompletionFields() {
+      const isDone = document.getElementById('act-status').value === 'done';
+      document.getElementById('completion-fields').style.display = isDone ? 'block' : 'none';
+    }
+
+    function onActivitySportChange(details = {}) {
+      const sportId = document.getElementById('act-sport').value;
+      const container = document.getElementById('smart-fields-container');
+      const gpxBox = document.getElementById('gpx-import-box');
+
+      // Filtrer les modèles du sport choisi
+      const picker = document.getElementById('act-template-picker');
+      const matchingTpls = state.templates.filter(t => t.sportId === sportId);
+      picker.innerHTML = matchingTpls.length
+        ? matchingTpls.map(t => `<option value="${t.id}">${t.title} (${t.duration} min)</option>`).join('')
+        : `<option value="">Aucun modèle pour ce sport</option>`;
+
+      gpxBox.style.display = (sportId === 'running' || sportId === 'velo') ? 'block' : 'none';
+
+      if (sportId === 'running' || sportId === 'velo') {
+        container.innerHTML = `
+          <div class="row-2">
+            <div class="form-group">
+              <label>Distance (km)</label>
+              <input type="number" step="0.01" id="smart-distance" value="${details.distance || ''}" placeholder="10.5" />
+            </div>
+            <div class="form-group">
+              <label>Dénivelé positif D+ (m)</label>
+              <input type="number" id="smart-elevation" value="${details.elevation || ''}" placeholder="120" />
+            </div>
+          </div>
+        `;
+      } else if (sportId === 'renforcement') {
+        state.currentExercises = details.exercises ? JSON.parse(JSON.stringify(details.exercises)) : [{ name: '', sets: '', reps: '', weight: '' }];
+        renderExercisesEditor();
+      } else if (sportId === 'tennis' || sportId === 'badminton') {
+        container.innerHTML = `
+          <div class="row-2">
+            <div class="form-group">
+              <label>Type de séance</label>
+              <select id="smart-matchType">
+                <option value="Entraînement" ${details.matchType === 'Entraînement' ? 'selected' : ''}>Entraînement</option>
+                <option value="Match amical" ${details.matchType === 'Match amical' ? 'selected' : ''}>Match amical</option>
+                <option value="Tournoi" ${details.matchType === 'Tournoi' ? 'selected' : ''}>Tournoi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Partenaire / Adversaire</label>
+              <input type="text" id="smart-partner" value="${details.partner || ''}" placeholder="Prénom" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Score / Points techniques</label>
+            <input type="text" id="smart-score" value="${details.score || ''}" placeholder="Ex: 6/4 6/3 ou travail revers" />
+          </div>
+        `;
+      } else if (sportId === 'equitation') {
+        container.innerHTML = `
+          <div class="row-2">
+            <div class="form-group">
+              <label>Cheval monté</label>
+              <input type="text" id="smart-horse" value="${details.horse || ''}" placeholder="Nom du cheval" />
+            </div>
+            <div class="form-group">
+              <label>Discipline</label>
+              <select id="smart-discipline">
+                <option value="Plat" ${details.discipline === 'Plat' ? 'selected' : ''}>Plat / Dressage</option>
+                <option value="Obstacle" ${details.discipline === 'Obstacle' ? 'selected' : ''}>Obstacle (CSO)</option>
+                <option value="Extérieur" ${details.discipline === 'Extérieur' ? 'selected' : ''}>Extérieur / Balade</option>
+                <option value="Longe" ${details.discipline === 'Longe' ? 'selected' : ''}>Longe / Travail à pied</option>
+              </select>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = '';
+      }
+    }
+
+    function renderExercisesEditor() {
+      const container = document.getElementById('smart-fields-container');
+      container.innerHTML = `
+        <div class="form-group">
+          <label>Exercices (Nom | Séries | Reps | Poids kg)</label>
+          <div id="exo-list">
+            ${state.currentExercises.map((ex, idx) => `
+              <div class="exo-row">
+                <input type="text" placeholder="Exercice" value="${escapeHtml(ex.name)}" oninput="state.currentExercises[${idx}].name = this.value" />
+                <input type="number" placeholder="Sér." value="${ex.sets}" oninput="state.currentExercises[${idx}].sets = this.value" />
+                <input type="number" placeholder="Reps" value="${ex.reps}" oninput="state.currentExercises[${idx}].reps = this.value" />
+                <input type="number" step="0.5" placeholder="kg" value="${ex.weight}" oninput="state.currentExercises[${idx}].weight = this.value" />
+                <button type="button" class="btn-danger-ghost" onclick="removeExerciseRow(${idx})">✕</button>
+              </div>
+            `).join('')}
+          </div>
+          <button type="button" class="btn-secondary" style="margin-top:4px;" onclick="addExerciseRow()">+ Ajouter un exercice</button>
+        </div>
+      `;
+    }
+
+    function addExerciseRow() {
+      state.currentExercises.push({ name: '', sets: '', reps: '', weight: '' });
+      renderExercisesEditor();
+    }
+
+    function removeExerciseRow(idx) {
+      state.currentExercises.splice(idx, 1);
+      renderExercisesEditor();
+    }
+
+    function appendTemplateToActivity() {
+      const tplId = document.getElementById('act-template-picker').value;
+      const tpl = state.templates.find(t => t.id === tplId);
+      if (!tpl) return;
+      const titleInput = document.getElementById('act-title');
+      const contentInput = document.getElementById('act-content');
+      const durInput = document.getElementById('act-duration');
+
+      if (!titleInput.value) titleInput.value = tpl.title;
+      contentInput.value = contentInput.value
+        ? contentInput.value + '\n\n' + tpl.description
+        : tpl.description;
+      if (!durInput.value) durInput.value = tpl.duration;
+    }
+
+    // --- LECTEUR GPX GARMIN / STRAVA ---
+    function handleGpxUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(e.target.result, 'text/xml');
+          const pts = Array.from(xml.getElementsByTagName('trkpt'));
+          if (pts.length < 2) {
+            alert('Fichier GPX invalide ou sans trace GPS.');
+            return;
+          }
+
+          let totalDistKm = 0;
+          let totalElevGain = 0;
+          let prevLat = null, prevLon = null, prevEle = null;
+          let firstTime = null, lastTime = null;
+
+          pts.forEach(pt => {
+            const lat = parseFloat(pt.getAttribute('lat'));
+            const lon = parseFloat(pt.getAttribute('lon'));
+            const eleNode = pt.getElementsByTagName('ele')[0];
+            const timeNode = pt.getElementsByTagName('time')[0];
+
+            const ele = eleNode ? parseFloat(eleNode.textContent) : null;
+            if (timeNode) {
+              const t = new Date(timeNode.textContent);
+              if (!isNaN(t)) {
+                if (!firstTime) firstTime = t;
+                lastTime = t;
+              }
+            }
+
+            if (prevLat !== null && prevLon !== null) {
+              totalDistKm += haversineKm(prevLat, prevLon, lat, lon);
+            }
+            if (prevEle !== null && ele !== null && ele > prevEle) {
+              totalElevGain += (ele - prevEle);
+            }
+            prevLat = lat;
+            prevLon = lon;
+            if (ele !== null) prevEle = ele;
+          });
+
+          if (firstTime) {
+            document.getElementById('act-date').value = firstTime.toISOString().split('T')[0];
+            if (lastTime && lastTime > firstTime) {
+              const mins = Math.round((lastTime - firstTime) / 60000);
+              if (mins > 0) document.getElementById('act-duration').value = mins;
+            }
+          }
+          const distEl = document.getElementById('smart-distance');
+          const elevEl = document.getElementById('smart-elevation');
+          if (distEl) distEl.value = totalDistKm.toFixed(2);
+          if (elevEl) elevEl.value = Math.round(totalElevGain);
+          if (!document.getElementById('act-title').value) {
+            document.getElementById('act-title').value = file.name.replace(/\.gpx$/i, '');
+          }
+          document.getElementById('act-status').value = 'done';
+          toggleCompletionFields();
+        } catch (err) {
+          alert('Impossible de lire ce fichier GPX.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function saveActivity(e) {
+      e.preventDefault();
+      const id = document.getElementById('act-id').value || ('act-' + Date.now());
+      const sportId = document.getElementById('act-sport').value;
+      const status = document.getElementById('act-status').value;
+
+      let details = {};
+      if (sportId === 'running' || sportId === 'velo') {
+        details.distance = parseFloat(document.getElementById('smart-distance')?.value) || 0;
+        details.elevation = parseInt(document.getElementById('smart-elevation')?.value) || 0;
+      } else if (sportId === 'renforcement') {
+        details.exercises = state.currentExercises.filter(ex => ex.name.trim() !== '');
+      } else if (sportId === 'tennis' || sportId === 'badminton') {
+        details.matchType = document.getElementById('smart-matchType')?.value || '';
+        details.partner = document.getElementById('smart-partner')?.value || '';
+        details.score = document.getElementById('smart-score')?.value || '';
+      } else if (sportId === 'equitation') {
+        details.horse = document.getElementById('smart-horse')?.value || '';
+        details.discipline = document.getElementById('smart-discipline')?.value || '';
+      }
+
+      const actObj = {
+        id,
+        sportId,
+        date: document.getElementById('act-date').value,
+        status,
+        title: document.getElementById('act-title').value.trim(),
+        content: document.getElementById('act-content').value.trim(),
+        duration: parseInt(document.getElementById('act-duration').value) || 0,
+        details,
+        rpe: status === 'done' ? (parseInt(document.getElementById('act-rpe').value) || null) : null,
+        comment: status === 'done' ? document.getElementById('act-comment').value.trim() : ''
+      };
+
+      const idx = state.activities.findIndex(a => a.id === id);
+      if (idx >= 0) state.activities[idx] = actObj;
+      else state.activities.push(actObj);
+
+      persistState();
+      closeModal('modal-activity');
+      renderCalendar();
+      renderActivities();
+    }
+
+    function deleteCurrentActivity() {
+      const id = document.getElementById('act-id').value;
+      state.activities = state.activities.filter(a => a.id !== id);
+      persistState();
+      closeModal('modal-activity');
+      renderCalendar();
+      renderActivities();
+    }
+
+    // --- SÉANCES TYPES (MODÈLES) ---
+    function renderTemplates() {
+      const filterBar = document.getElementById('templates-sport-filters');
+      filterBar.innerHTML = `<button class="chip ${state.tplFilterSport === 'all' ? 'active' : ''}" onclick="setTplFilter('all')">Tous</button>` +
+        state.sports.map(s => `
+          <button class="chip ${state.tplFilterSport === s.id ? 'active' : ''}" onclick="setTplFilter('${s.id}')">
+            <span class="dot" style="background:${s.color}"></span>${s.name}
+          </button>
+        `).join('');
+
+      let list = state.templates;
+      if (state.tplFilterSport !== 'all') {
+        list = list.filter(t => t.sportId === state.tplFilterSport);
+      }
+
+      const container = document.getElementById('templates-list');
+      if (list.length === 0) {
+        container.innerHTML = `<div class="card empty-state">Aucun modèle enregistré pour ce filtre.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(tpl => {
+        const sp = getSport(tpl.sportId);
+        return `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span class="sport-badge" style="background:${sp.color}">${sp.name}</span>
+              <span style="font-size:12px; color:var(--muted); font-weight:600;">⏱ ${tpl.duration} min</span>
+            </div>
+            <div style="font-weight:700; font-size:16px; margin-bottom:6px;">${escapeHtml(tpl.title)}</div>
+            <div style="font-size:13px; color:var(--text); background:var(--bg); padding:8px 10px; border-radius:10px; white-space:pre-line; margin-bottom:10px;">${escapeHtml(tpl.description)}</div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn-danger-ghost" onclick="deleteTemplate('${tpl.id}')">Supprimer</button>
+              <button class="btn-secondary" onclick="openTemplateModal('${tpl.id}')">Modifier</button>
+              <button class="btn-primary" style="padding:7px 11px; font-size:13px;" onclick="useTemplateForNewActivity('${tpl.id}')">Planifier</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setTplFilter(sportId) {
+      state.tplFilterSport = sportId;
+      renderTemplates();
+    }
+
+    function openTemplateModal(tplId = null) {
+      const sel = document.getElementById('tpl-sport');
+      sel.innerHTML = state.sports.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+      if (tplId) {
+        const tpl = state.templates.find(t => t.id === tplId);
+        if (!tpl) return;
+        document.getElementById('modal-tpl-title').textContent = 'Modifier le modèle';
+        document.getElementById('tpl-id').value = tpl.id;
+        sel.value = tpl.sportId;
+        document.getElementById('tpl-duration').value = tpl.duration;
+        document.getElementById('tpl-title').value = tpl.title;
+        document.getElementById('tpl-desc').value = tpl.description;
+      } else {
+        document.getElementById('modal-tpl-title').textContent = 'Nouvelle séance type';
+        document.getElementById('tpl-id').value = '';
+        document.getElementById('tpl-duration').value = '';
+        document.getElementById('tpl-title').value = '';
+        document.getElementById('tpl-desc').value = '';
+      }
+      document.getElementById('modal-template').classList.add('open');
+    }
+
+    function saveTemplate(e) {
+      e.preventDefault();
+      const id = document.getElementById('tpl-id').value || ('tpl-' + Date.now());
+      const obj = {
+        id,
+        sportId: document.getElementById('tpl-sport').value,
+        duration: parseInt(document.getElementById('tpl-duration').value) || 30,
+        title: document.getElementById('tpl-title').value.trim(),
+        description: document.getElementById('tpl-desc').value.trim()
+      };
+      const idx = state.templates.findIndex(t => t.id === id);
+      if (idx >= 0) state.templates[idx] = obj;
+      else state.templates.push(obj);
+
+      persistState();
+      closeModal('modal-template');
+      renderTemplates();
+    }
+
+    function deleteTemplate(id) {
+      state.templates = state.templates.filter(t => t.id !== id);
+      persistState();
+      renderTemplates();
+    }
+
+    function useTemplateForNewActivity(tplId) {
+      const tpl = state.templates.find(t => t.id === tplId);
+      if (!tpl) return;
+      openActivityModal();
+      document.getElementById('act-sport').value = tpl.sportId;
+      onActivitySportChange({});
+      document.getElementById('act-title').value = tpl.title;
+      document.getElementById('act-content').value = tpl.description;
+      document.getElementById('act-duration').value = tpl.duration;
+    }
+
+    // --- AJOUT SPORT PERSONNALISÉ ---
+    function openSportModal() {
+      document.getElementById('new-sport-name').value = '';
+      document.getElementById('modal-sport').classList.add('open');
+    }
+
+    function saveCustomSport(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-sport-name').value.trim();
+      const color = document.getElementById('new-sport-color').value;
+      if (!name) return;
+      const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-3);
+      state.sports.push({ id, name, color });
+      persistState();
+      closeModal('modal-sport');
+      renderTemplates();
+    }
+
+    // --- STATISTIQUES ---
+    function populateStatsFilters() {
+      const monthSel = document.getElementById('stats-month-filter');
+      const monthsSet = new Set([todayISO().slice(0, 7)]);
+      state.activities.forEach(a => {
+        if (a.date) monthsSet.add(a.date.slice(0, 7));
+      });
+      const months = Array.from(monthsSet).sort().reverse();
+
+      const currentMonthVal = monthSel.value || 'all';
+      monthSel.innerHTML = `<option value="all">Tous les mois</option>` +
+        months.map(m => {
+          const [y, mo] = m.split('-');
+          const label = new Date(y, parseInt(mo) - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+          return `<option value="${m}">${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
+        }).join('');
+      monthSel.value = currentMonthVal;
+
+      const sportSel = document.getElementById('stats-sport-filter');
+      const currentSportVal = sportSel.value || 'all';
+      sportSel.innerHTML = `<option value="all">Tous les sports</option>` +
+        state.sports.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      sportSel.value = currentSportVal;
+    }
+
+    function renderStats() {
+      const monthVal = document.getElementById('stats-month-filter').value;
+      const sportVal = document.getElementById('stats-sport-filter').value;
+
+      let doneActs = state.activities.filter(a => a.status === 'done');
+      if (monthVal !== 'all') {
+        doneActs = doneActs.filter(a => a.date.startsWith(monthVal));
+      }
+      if (sportVal !== 'all') {
+        doneActs = doneActs.filter(a => a.sportId === sportVal);
+      }
+
+      // 1. Nombre & Temps
+      document.getElementById('stat-count').textContent = doneActs.length;
+      const totalMins = doneActs.reduce((acc, a) => acc + (a.duration || 0), 0);
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      document.getElementById('stat-time').textContent = `${h}h ${String(m).padStart(2, '0')}`;
+
+      // 2. Distance & D+ uniquement pour Running et Vélo (et Tous les sports)
+      const distBox = document.getElementById('stat-distance-box');
+      if (sportVal === 'all' || sportVal === 'running' || sportVal === 'velo') {
+        distBox.style.display = 'block';
+        const cardioActs = doneActs.filter(a => a.sportId === 'running' || a.sportId === 'velo');
+        const totalKm = cardioActs.reduce((acc, a) => acc + (parseFloat(a.details?.distance) || 0), 0);
+        const totalElev = cardioActs.reduce((acc, a) => acc + (parseInt(a.details?.elevation) || 0), 0);
+        document.getElementById('stat-dist').textContent = `${totalKm.toFixed(1)} km`;
+        document.getElementById('stat-elev').textContent = `${totalElev} m D+`;
+      } else {
+        distBox.style.display = 'none';
+      }
+
+      // 3. Ressenti moyen
+      const rpeActs = doneActs.filter(a => a.rpe !== null && a.rpe !== undefined);
+      if (rpeActs.length > 0) {
+        const avgRpe = (rpeActs.reduce((acc, a) => acc + a.rpe, 0) / rpeActs.length).toFixed(1);
+        document.getElementById('stat-rpe').textContent = `${avgRpe} / 10`;
+      } else {
+        document.getElementById('stat-rpe').textContent = `- / 10`;
+      }
+
+      // 4. Répartition par sport : UNIQUEMENT quand "Tous les sports" est sélectionné
+      const repCard = document.getElementById('stats-repartition-card');
+      if (sportVal === 'all') {
+        repCard.style.display = 'block';
+        const barsContainer = document.getElementById('stats-repartition-bars');
+        if (doneActs.length === 0) {
+          barsContainer.innerHTML = `<div style="font-size:13px; color:var(--muted);">Aucune donnée sur cette période.</div>`;
+        } else {
+          barsContainer.innerHTML = state.sports.map(sp => {
+            const spActs = doneActs.filter(a => a.sportId === sp.id);
+            if (spActs.length === 0) return '';
+            const pct = Math.round((spActs.length / doneActs.length) * 100);
+            const spMins = spActs.reduce((acc, a) => acc + (a.duration || 0), 0);
+            return `
+              <div class="bar-row">
+                <div class="bar-top">
+                  <span>${sp.name} (${spActs.length})</span>
+                  <span style="color:var(--muted);">${Math.floor(spMins/60)}h${String(spMins%60).padStart(2,'0')} • ${pct}%</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${pct}%; background:${sp.color};"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } else {
+        repCard.style.display = 'none';
+      }
+
+      // 5. Historique filtré
+      const histContainer = document.getElementById('stats-history-list');
+      const sortedHist = [...doneActs].sort((a, b) => b.date.localeCompare(a.date));
+      histContainer.innerHTML = sortedHist.length
+        ? sortedHist.map(a => renderActivityCard(a)).join('')
+        : `<div class="card empty-state">Aucune séance réalisée pour ces filtres.</div>`;
+    }
+
+    // --- UTILITAIRES ---
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Initialisation au démarrage
+    loadState();
+    renderCalendar();
+  </script>
+</body>
+</html>
